@@ -36,3 +36,7 @@ repo/
 ### Nitea ###
 # Holds the private SDK key; .env.example is the template
 .env
+
+### Example mod ###
+# Its own repository (Nitea NeoForge Example Mod), kept here so it can compile the library from ../src
+example-mod/

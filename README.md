@@ -46,7 +46,7 @@ Create a project on [nitea.cc](https://nitea.cc), copy its SDK key (`nt_…`) an
 sdkKey=nt_your_sdk_key
 ```
 
-Keep it out of git. The example mod generates this file at build time from a git-ignored `.env` (see [`example-mod/build.gradle`](example-mod/build.gradle)). The key can only send events to your project, never read anything.
+Keep it out of git. The example mod generates this file at build time from a git-ignored `.env`. The key can only send events to your project, never read anything.
 
 You can also set it with the system property `-Dnitea.<modid>.sdkKey=…` or the environment variable `NITEA_<MODID>_SDK_KEY`.
 
@@ -160,7 +160,6 @@ Exceptions you pass to `captureException` yourself are always reported by your m
 | ---- | ---------- |
 | [`src/main/java/cc/nitea/`](src/main/java/cc/nitea) | The public API (`Nitea`, `NiteaClient`, `NiteaOptions`, `NiteaConsent`, `Level`) and its internals: capturing, attribution, consent, sending. |
 | [`src/main/java/cc/nitea/neoforge/`](src/main/java/cc/nitea/neoforge) | The in-game screens: consent screen and title screen button. |
-| [`example-mod/`](example-mod) | A test mod that uses Nitea and triggers errors, crashes and player reports on demand. |
 
 ## Building
 
@@ -171,23 +170,9 @@ Requirements: JDK 21 or newer to run Gradle; Gradle downloads JDK 25 for the bui
 ./gradlew publishToMavenLocal   # cc.nitea:nitea-neoforge, for testing in your own mod with mavenLocal()
 ```
 
-### Try the example mod
+### Example mod
 
-1. On [nitea.cc](https://nitea.cc), create a project with mod ID `niteaexample` and copy its SDK key.
-2. Copy `example-mod/.env.example` to `example-mod/.env` and paste the key.
-3. From `example-mod/`, run `./gradlew runClient`. The example compiles the library from `src/` directly, so changes show up right away. After changing Gradle files, reload the Gradle project in your IDE before using its run configurations.
-4. Answer Nitea's consent screen, then in game use the Faulty Wand from the "Nitea Example" creative tab, or the `/em` command:
-
-| Command | What it does |
-| ------- | ------------ |
-| `/em nitea` | Shows whether reporting is on |
-| `/em bug <text>`, `/em suggest <text>` | Player reports |
-| `/em test error` | A caught exception with a "Caused by" chain |
-| `/em test warning` | A message event |
-| `/em test uncaught` | An exception nobody catches, on a worker thread |
-| `/em test gamecrash` | Crashes the game. The crash report is sent on the next launch. |
-
-Add `-Dnitea.debug=true` to the run configuration to log every request. Delete `example-mod/run/config/nitea/nitea.properties` to see the consent screen again.
+The **Nitea NeoForge Example Mod** is a separate repository: a test mod that uses Nitea and triggers errors, crashes and player reports on demand. Clone it next to this repository and it compiles the library from here, so changes show up right away.
 
 ## Privacy
 
