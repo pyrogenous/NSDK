@@ -1,0 +1,74 @@
+plugins {
+    id 'java-library'
+    id 'maven-publish'
+    id 'net.neoforged.moddev' version '2.0.147'
+}
+
+// On JitPack, publish under the coordinates it serves: com.github.<user>:<repo>:<tag>
+group = System.getenv('JITPACK') ? System.getenv('GROUP') : 'cc.nitea'
+version = System.getenv('JITPACK') ? System.getenv('VERSION') : project.nitea_version
+
+base {
+    archivesName = 'nitea-neoforge'
+}
+
+java.toolchain.languageVersion = JavaLanguageVersion.of(25)
+java {
+    withSourcesJar()
+    withJavadocJar()
+}
+
+// Only used to compile against Minecraft and NeoForge: Nitea is a library, not a mod
+neoForge {
+    version = project.neo_version
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    testImplementation platform('org.junit:junit-bom:5.13.4')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+}
+
+tasks.named('javadoc', Javadoc) {
+    exclude 'cc/nitea/internal/**'
+    options.addBooleanOption('Xdoclint:none', true)
+}
+
+tasks.named('jar', Jar) {
+    manifest {
+        attributes(
+                'Automatic-Module-Name': 'cc.nitea',
+                // A game library: loaded next to Minecraft so it can use its classes, but not a mod (no mod list
+                // entry, no neoforge.mods.toml). Nitea.init starts its screens.
+                'FMLModType': 'GAMELIBRARY',
+                'Implementation-Title': 'Nitea',
+                'Implementation-Version': project.version,
+        )
+    }
+}
+
+tasks.named('test', Test) {
+    useJUnitPlatform()
+}
+
+publishing {
+    publications {
+        register('mavenJava', MavenPublication) {
+            artifactId = System.getenv('JITPACK') ? System.getenv('ARTIFACT') : 'nitea-neoforge'
+            from components.java
+            pom {
+                name = 'Nitea for NeoForge'
+                description = 'Opt-in error reporting and player feedback for NeoForge mods'
+                url = 'https://nitea.cc'
+            }
+        }
+    }
+}

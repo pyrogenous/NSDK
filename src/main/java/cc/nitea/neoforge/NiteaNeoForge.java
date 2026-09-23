@@ -6,9 +6,9 @@ import net.neoforged.fml.loading.FMLEnvironment;
 import net.neoforged.fml.loading.FMLPaths;
 
 /**
- * NeoForge integration of the Nitea library. This jar is a game library, not a mod: it has no entry point and
- * doesn't show up in the mod list. The core calls {@link #install()} from {@code Nitea.init}, i.e. from the
- * constructor of the first mod that starts Nitea, and it sets up Nitea's own screens once for the whole game.
+ * NeoForge side of the Nitea library. Nitea is a game library, not a mod: it has no entry point and doesn't show
+ * up in the mod list. {@code Nitea.init} calls {@link #install()}, i.e. from the constructor of the first mod that
+ * starts Nitea, and it sets up Nitea's own screens once for the whole game.
  */
 public final class NiteaNeoForge {
     private static boolean installed;

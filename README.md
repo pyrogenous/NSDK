@@ -2,10 +2,10 @@
   <img src=".github/logo.png" alt="Nitea" width="96">
 </p>
 
-<h1 align="center">Nitea for Minecraft mods</h1>
+<h1 align="center">Nitea for NeoForge</h1>
 
 <p align="center">
-  Free, privacy-first error tracking and player feedback for Minecraft mods.<br>
+  Free, privacy-first error tracking and player feedback for NeoForge mods.<br>
   <a href="https://nitea.cc">Website</a> · <a href="https://nitea.cc/d">Dashboard</a> · <a href="https://nitea.cc/legal/privacy-policy">Privacy policy</a>
 </p>
 
@@ -14,70 +14,18 @@
 Nitea is a small library you embed in your mod. It reports errors, uncaught exceptions and crashes caused by your mod to your [Nitea dashboard](https://nitea.cc/d), groups them into issues, and lets players send bug reports and suggestions that you can show on a public roadmap.
 
 - **Opt-in only.** Nothing is sent until the player says yes. Nitea asks once, for every mod using it.
-- **One Nitea per game.** However many mods embed it, they share one engine, one consent screen and one settings file.
+- **A library, not a mod.** It doesn't show up in the mod list. However many mods embed it, the game has one Nitea: one consent screen, one settings file.
 - **Only your bugs.** Each mod only receives the errors and crashes its own code caused, never another mod's.
 - **Anonymous.** No usernames, player UUIDs or IP addresses. Ever.
-- **Zero dependencies.** The core is plain Java 17. Events are sent from a background thread and rate limited.
+- **No dependencies.** Events are sent from a background thread and rate limited, so the game never waits on the network.
 
-## Repository layout
+Supports NeoForge for Minecraft 26.2.
 
-| Folder | What it is |
-| ------ | ---------- |
-| [`nitea-java/`](nitea-java) | The core library: plain Java 17, no dependencies, works on any loader. Capturing, grouping, attribution, consent and sending. |
-| [`nitea-neoforge/`](nitea-neoforge) | The NeoForge integration: the consent screen and the title screen button. A game library, not a mod: it isn't in the mod list, and the core starts it from `Nitea.init`. |
-| [`example-mod/`](example-mod) | A NeoForge 26.2 test mod that embeds Nitea and triggers errors, crashes and player reports on demand. |
-
-## Player consent
-
-Consent belongs to **Nitea, not to the mod that embeds it**. A player who installs five mods using Nitea is asked once, and their answer applies to all five.
-
-1. The first time the title screen opens, Nitea shows its consent screen instead. It lists every mod using Nitea and explains what a report contains. The player has to choose **Allow reports** or **Don't allow**.
-2. The answer is saved in `config/nitea/nitea.properties` and never asked again.
-3. A Nitea button next to the title screen's small icon buttons opens the preferences screen, where the player can opt in or out at any time.
-
-| State | What happens |
-| ----- | ------------ |
-| Not chosen yet | Events wait in memory (up to 25 per mod). Nothing leaves the computer. |
-| Allowed | Waiting and new events are sent. A random installation ID is created to count affected players. |
-| Not allowed | Waiting events are dropped, nothing is ever sent, the installation ID is deleted and the player isn't asked again. |
-
-Crash reports written before the player allowed reporting are never sent.
-
-On a dedicated server there is no screen: nothing is sent until the server owner sets `consent=granted` in `config/nitea/nitea.properties`.
-
-```properties
-# config/nitea/nitea.properties
-consent=granted        # or denied
-examplemod.enabled=false   # optional: turn off a single mod
-```
-
-## Many mods, one engine
-
-Mods don't talk to each other, so Nitea makes sure they don't need to:
-
-- **One copy.** Every NeoForge mod bundles `nitea-java` and `nitea-neoforge` with Jar-in-Jar. NeoForge loads a single copy of each, the newest, so there's one consent screen and one title screen button. Nitea is a library: it never shows up as a mod.
-- **Shared state.** Even when a mod shades its own copy of the core, every copy shares the same state: the consent, the installation ID and the list of mods using Nitea live in one JVM-wide registry made only of JDK types, readable whatever class loader loaded the copy. Changing the consent from any copy updates all of them at once.
-- **Attribution.** Each mod registers its packages (and, on NeoForge, its Java module). When an uncaught exception or a Minecraft crash happens, Nitea starts from the root cause and walks the stack past JDK, Minecraft and loader frames. The first frame left decides:
-  - it belongs to a mod using Nitea: only that mod reports it;
-  - it belongs to another mod or library: nobody reports it;
-  - it's Mixin code injected into the game (`handler$…$modid$…`): the mod that injected it.
-
-  So when mod A calls mod B and B throws, B gets the issue, not A. When the game throws because A passed it bad data, A gets it.
-
-Exceptions you pass to `captureException` yourself are always reported by your mod: you chose to send them.
-
-## Using Nitea in your mod (NeoForge)
-
-### Why two jars?
-
-- `nitea-java` is the core: plain Java, no Minecraft classes, so the same jar works on every loader and Minecraft version.
-- `nitea-neoforge` holds the screens, which need Minecraft's GUI classes and change with each Minecraft version. It's tiny, and Fabric or Forge get their own later without touching the core.
-
-Your mod calls the core only (`Nitea.init`, `NiteaClient`); the core finds and starts the NeoForge integration on its own.
+## Add Nitea to your mod
 
 ### 1. Add the dependency
 
-From [JitPack](https://jitpack.io), where every tag of this repository is built (replace `<user>`, `<repo>` and `<tag>`):
+Nitea is published on [JitPack](https://jitpack.io). In your mod's `build.gradle` (ModDevGradle), replace `<user>`, `<repo>` and `<tag>`:
 
 ```groovy
 repositories {
@@ -85,33 +33,8 @@ repositories {
 }
 
 dependencies {
-    jarJar(implementation("com.github.<user>.<repo>:nitea-java:<tag>"))
-    jarJar(implementation("com.github.<user>.<repo>:nitea-neoforge:<tag>"))
-}
-```
-
-Or publish it locally once:
-
-```sh
-cd nitea-java && ./gradlew publishToMavenLocal
-cd ../nitea-neoforge && ./gradlew publishToMavenLocal
-```
-
-and use the `cc.nitea` coordinates in your mod's `build.gradle` (ModDevGradle):
-
-```groovy
-repositories {
-    mavenLocal()
-}
-
-dependencies {
-    // Bundled in your jar with Jar-in-Jar; NeoForge keeps one copy of each when several mods ship them
-    jarJar(implementation("cc.nitea:nitea-java")) {
-        version { strictly '[0.2.0,1.0.0)'; prefer '0.2.0' }
-    }
-    jarJar(implementation("cc.nitea:nitea-neoforge")) {
-        version { strictly '[0.2.0,1.0.0)'; prefer '0.2.0' }
-    }
+    // Bundled in your jar with Jar-in-Jar. When several mods ship Nitea, NeoForge loads one copy, the newest.
+    jarJar(implementation("com.github.<user>:<repo>:<tag>"))
 }
 ```
 
@@ -176,9 +99,44 @@ Reported automatically once `Nitea.init` has run:
 
 When your project has a public page, `reportBug` and `reportSuggestion` get back a one-time link where the player adds a description, steps and screenshots. On the client Nitea opens it in the browser; on a server, pass a callback and send the player the link.
 
-### Other loaders
+## Player consent
 
-The core (`cc.nitea:nitea-java`) runs on Fabric, Quilt and Forge too, but the consent screen only exists for NeoForge so far. Without it the player can't be asked in game, so nothing is sent until `consent=granted` is set in `config/nitea/nitea.properties`.
+Consent belongs to **Nitea, not to the mod that embeds it**. A player who installs five mods using Nitea is asked once, and their answer applies to all five.
+
+1. The first time the title screen opens, Nitea shows its consent screen instead. It lists every mod using Nitea and explains what a report contains. The player has to choose **Allow reports** or **Don't allow**.
+2. The answer is saved in `config/nitea/nitea.properties` and never asked again.
+3. A Nitea button next to the title screen's small icon buttons opens the preferences screen, where the player can opt in or out at any time.
+
+| State | What happens |
+| ----- | ------------ |
+| Not chosen yet | Events wait in memory (up to 25 per mod). Nothing leaves the computer. |
+| Allowed | Waiting and new events are sent. A random installation ID is created to count affected players. |
+| Not allowed | Waiting events are dropped, nothing is ever sent, the installation ID is deleted and the player isn't asked again. |
+
+Crash reports written before the player allowed reporting are never sent.
+
+On a dedicated server there is no screen: nothing is sent until the server owner sets `consent=granted` in `config/nitea/nitea.properties`.
+
+```properties
+# config/nitea/nitea.properties
+consent=granted            # or denied
+examplemod.enabled=false   # optional: turn off a single mod
+```
+
+## Many mods, one Nitea
+
+Mods don't talk to each other, so Nitea makes sure they don't need to:
+
+- **One copy.** Every mod bundles Nitea with Jar-in-Jar and NeoForge loads a single copy, the newest. Nitea is a game library (`FMLModType: GAMELIBRARY`): it runs next to Minecraft but isn't a mod, and the first mod calling `Nitea.init` starts its screens.
+- **Shared state.** Even when a mod shades its own copy, every copy shares the same state: the consent, the installation ID and the list of mods using Nitea live in one JVM-wide registry made only of JDK types, readable whatever class loader loaded the copy. Changing the consent from any copy updates all of them at once.
+- **Attribution.** Each mod registers its packages and its Java module. When an uncaught exception or a Minecraft crash happens, Nitea starts from the root cause and walks the stack past JDK, Minecraft and loader frames. The first frame left decides:
+  - it belongs to a mod using Nitea: only that mod reports it;
+  - it belongs to another mod or library: nobody reports it;
+  - it's Mixin code injected into the game (`handler$…$modid$…`): the mod that injected it.
+
+  So when mod A calls mod B and B throws, B gets the issue, not A. When the game throws because A passed it bad data, A gets it.
+
+Exceptions you pass to `captureException` yourself are always reported by your mod: you chose to send them.
 
 ## Options
 
@@ -196,21 +154,28 @@ The core (`cc.nitea:nitea-java`) runs on Fabric, Quilt and Forge too, but the co
 | `environment`, `minecraftVersion`, `loader`, `side` | detected | Override what Nitea detects. |
 | `debug(boolean)` | false | Log every request and response. |
 
+## Repository layout
+
+| Path | What it is |
+| ---- | ---------- |
+| [`src/main/java/cc/nitea/`](src/main/java/cc/nitea) | The public API (`Nitea`, `NiteaClient`, `NiteaOptions`, `NiteaConsent`, `Level`) and its internals: capturing, attribution, consent, sending. |
+| [`src/main/java/cc/nitea/neoforge/`](src/main/java/cc/nitea/neoforge) | The in-game screens: consent screen and title screen button. |
+| [`example-mod/`](example-mod) | A test mod that uses Nitea and triggers errors, crashes and player reports on demand. |
+
 ## Building
 
-Requirements: JDK 25 (the core targets Java 17 bytecode).
+Requirements: JDK 21 or newer to run Gradle; Gradle downloads JDK 25 for the build if it's missing.
 
 ```sh
-cd nitea-java && ./gradlew build         # core library + tests
-cd nitea-neoforge && ./gradlew build     # the NeoForge mod
-cd nitea-neoforge && ./gradlew nsdk      # the files offered as "Download NSDK" on the website (build/nsdk)
+./gradlew build                 # the library jar, in build/libs
+./gradlew publishToMavenLocal   # cc.nitea:nitea-neoforge, for testing in your own mod with mavenLocal()
 ```
 
 ### Try the example mod
 
 1. On [nitea.cc](https://nitea.cc), create a project with mod ID `niteaexample` and copy its SDK key.
 2. Copy `example-mod/.env.example` to `example-mod/.env` and paste the key.
-3. From `example-mod/`, run `./gradlew runClient`. The library is built from `nitea-java/`, and the NeoForge integration is compiled from `nitea-neoforge/` into the example (it reuses the example's Minecraft setup). After changing the Gradle files, reload the Gradle project in your IDE before using its run configurations.
+3. From `example-mod/`, run `./gradlew runClient`. The example compiles the library from `src/` directly, so changes show up right away. After changing Gradle files, reload the Gradle project in your IDE before using its run configurations.
 4. Answer Nitea's consent screen, then in game use the Faulty Wand from the "Nitea Example" creative tab, or the `/em` command:
 
 | Command | What it does |
@@ -222,7 +187,7 @@ cd nitea-neoforge && ./gradlew nsdk      # the files offered as "Download NSDK" 
 | `/em test uncaught` | An exception nobody catches, on a worker thread |
 | `/em test gamecrash` | Crashes the game. The crash report is sent on the next launch. |
 
-Add `-Dnitea.debug=true` to the run configuration to log every request. Delete `run/config/nitea/nitea.properties` to see the consent screen again.
+Add `-Dnitea.debug=true` to the run configuration to log every request. Delete `example-mod/run/config/nitea/nitea.properties` to see the consent screen again.
 
 ## Privacy
 

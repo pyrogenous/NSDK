@@ -34,11 +34,10 @@ base {
     archivesName = mod_id
 }
 
-// Nitea's NeoForge integration (consent screen, title screen button), compiled from ../nitea-neoforge into this
-// mod. It reuses this project's Minecraft setup, so the example runs without building nitea-neoforge on its own.
-// A real mod instead bundles the published jar, see the README.
-sourceSets.main.java.srcDir '../nitea-neoforge/src/main/java'
-sourceSets.main.resources.srcDir '../nitea-neoforge/src/main/resources'
+// The Nitea library, compiled from this repository's sources into the mod, so changes are picked up right away and
+// the example reuses its own Minecraft setup. A real mod instead bundles the published jar, see the README.
+sourceSets.main.java.srcDir '../src/main/java'
+sourceSets.main.resources.srcDir '../src/main/resources'
 
 // Mojang ships Java 25 to end users in 26.2, so mods should target Java 25.
 java.toolchain.languageVersion = JavaLanguageVersion.of(25)
@@ -118,14 +117,6 @@ configurations {
 }
 
 dependencies {
-    // The Nitea library, embedded in the mod jar with Jar-in-Jar. NeoForge picks the newest copy when several
-    // mods ship it, so every mod can bundle it safely.
-    jarJar(implementation("cc.nitea:nitea-java")) {
-        version {
-            strictly '[0.2.0,1.0.0)'
-            prefer '0.2.0'
-        }
-    }
 
     // Example optional mod dependency with JEI
     // The JEI API is declared for compile time use, while the full JEI artifact is used at runtime

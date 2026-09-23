@@ -41,34 +41,19 @@ public final class Nitea {
             String endpoint = resolve(options.endpoint, id, "endpoint", "ENDPOINT", bundled);
             NiteaClient client = new NiteaClient(options, sdkKey, endpoint != null ? endpoint : NiteaOptions.DEFAULT_ENDPOINT, log);
             installHooks();
-            installIntegrations(options, log);
+            installScreens(log);
             client.start();
             return client;
         });
     }
 
-    // Loader integrations ship as separate jars (e.g. nitea-neoforge, with the consent screen). They're not mods, so
-    // nothing starts them: the core does, through the mod's class loader, which can see them.
-    private static final String[] INTEGRATIONS = {"cc.nitea.neoforge.NiteaNeoForge"};
-
-    private static void installIntegrations(NiteaOptions options, Log log) {
-        ClassLoader[] loaders = {
-            options.owner != null ? options.owner.getClassLoader() : null,
-            Thread.currentThread().getContextClassLoader(),
-        };
-        for (String name : INTEGRATIONS) {
-            for (ClassLoader loader : loaders) {
-                if (loader == null) continue;
-                try {
-                    Class.forName(name, true, loader).getMethod("install").invoke(null);
-                    break;
-                } catch (ClassNotFoundException e) {
-                    // Not on this loader, or not installed at all
-                } catch (Throwable e) {
-                    log.warn("Could not start " + name + ": " + e);
-                    break;
-                }
-            }
+    // Nitea is a library, not a mod, so nothing else starts its in-game screens (consent, title screen button).
+    // Without NeoForge (e.g. in unit tests) there are none, and the rest of the library works the same.
+    private static void installScreens(Log log) {
+        try {
+            cc.nitea.neoforge.NiteaNeoForge.install();
+        } catch (LinkageError e) {
+            log.debug("Not running on NeoForge, no in-game screens: " + e);
         }
     }
 

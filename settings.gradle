@@ -5,10 +5,8 @@ pluginManagement {
 }
 
 plugins {
+    // Downloads the JDK 25 the build needs when it isn't installed (e.g. on JitPack)
     id 'org.gradle.toolchains.foojay-resolver-convention' version '1.0.0'
 }
 
 rootProject.name = 'nitea-neoforge'
-
-// Builds the library from the sibling folder, so changes are picked up without publishing
-includeBuild('../nitea-java')
