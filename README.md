@@ -77,14 +77,27 @@ Your mod calls the core only (`Nitea.init`, `NiteaClient`); the core finds and s
 
 ### 1. Add the dependency
 
-Until Nitea is on a public Maven repository, publish it locally once:
+From [JitPack](https://jitpack.io), where every tag of this repository is built (replace `<user>`, `<repo>` and `<tag>`):
+
+```groovy
+repositories {
+    maven { url 'https://jitpack.io' }
+}
+
+dependencies {
+    jarJar(implementation("com.github.<user>.<repo>:nitea-java:<tag>"))
+    jarJar(implementation("com.github.<user>.<repo>:nitea-neoforge:<tag>"))
+}
+```
+
+Or publish it locally once:
 
 ```sh
 cd nitea-java && ./gradlew publishToMavenLocal
 cd ../nitea-neoforge && ./gradlew publishToMavenLocal
 ```
 
-Then in your mod's `build.gradle` (ModDevGradle):
+and use the `cc.nitea` coordinates in your mod's `build.gradle` (ModDevGradle):
 
 ```groovy
 repositories {

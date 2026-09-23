@@ -1,0 +1,9 @@
+# JitPack builds the two libraries in this repository (there's no root Gradle build):
+#   com.github.<user>.<repo>:nitea-java:<tag>      the core, for every loader
+#   com.github.<user>.<repo>:nitea-neoforge:<tag>  the NeoForge integration (consent screen, title screen button)
+# Gradle downloads the JDK 25 that nitea-neoforge needs through its toolchain settings.
+jdk:
+  - openjdk21
+install:
+  - sh nitea-java/gradlew -p nitea-java publishToMavenLocal -x test
+  - sh nitea-neoforge/gradlew -p nitea-neoforge publishToMavenLocal

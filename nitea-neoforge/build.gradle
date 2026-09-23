@@ -4,8 +4,10 @@ plugins {
     id 'net.neoforged.moddev' version '2.0.147'
 }
 
-version = project.nitea_version
-group = 'cc.nitea'
+// On JitPack, publish under the coordinates it serves (com.github.<user>.<repo>:nitea-neoforge:<tag>), next to
+// the core built from ../nitea-java with the same coordinates
+group = System.getenv('JITPACK') ? "${System.getenv('GROUP')}.${System.getenv('ARTIFACT')}" : 'cc.nitea'
+version = System.getenv('JITPACK') ? System.getenv('VERSION') : project.nitea_version
 
 base {
     archivesName = 'nitea-neoforge'
@@ -23,7 +25,7 @@ neoForge {
 
 dependencies {
     // The loader-independent core. Mods bundle both jars with Jar-in-Jar (see README)
-    api "cc.nitea:nitea-java:${project.nitea_version}"
+    api "${project.group}:nitea-java:${project.version}"
 }
 
 tasks.named('jar', Jar) {

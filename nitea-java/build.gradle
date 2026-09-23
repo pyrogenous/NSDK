@@ -3,8 +3,9 @@ plugins {
     id 'maven-publish'
 }
 
-group = 'cc.nitea'
-version = '0.2.0'
+// On JitPack, publish under the coordinates it serves (com.github.<user>.<repo>:nitea-java:<tag>)
+group = System.getenv('JITPACK') ? "${System.getenv('GROUP')}.${System.getenv('ARTIFACT')}" : 'cc.nitea'
+version = System.getenv('JITPACK') ? System.getenv('VERSION') : '0.2.0'
 
 repositories {
     mavenCentral()
