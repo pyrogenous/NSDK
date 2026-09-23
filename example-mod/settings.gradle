@@ -8,7 +8,7 @@ plugins {
     id 'org.gradle.toolchains.foojay-resolver-convention' version '1.0.0'
 }
 
-// Builds Nitea from the sibling folders, so library changes are picked up without publishing.
-// A real mod would instead depend on the published artifacts from Maven.
+// Builds the Nitea library from the sibling folder, so library changes are picked up without publishing.
+// A real mod would instead depend on the published artifacts from Maven. Nitea's NeoForge mod is compiled as
+// a source set of this project (see build.gradle).
 includeBuild('../nitea-java')
-includeBuild('../nitea-neoforge')

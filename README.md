@@ -190,7 +190,7 @@ cd nitea-neoforge && ./gradlew nsdk      # the files offered as "Download NSDK" 
 
 1. On [nitea.cc](https://nitea.cc), create a project with mod ID `niteaexample` and copy its SDK key.
 2. Copy `example-mod/.env.example` to `example-mod/.env` and paste the key.
-3. From `example-mod/`, run `./gradlew runClient`. The library and the NeoForge mod are built from the sibling folders.
+3. From `example-mod/`, run `./gradlew runClient`. The library is built from `nitea-java/`, and Nitea's NeoForge mod is compiled from `nitea-neoforge/` as a second mod of the example (it reuses the example's Minecraft setup). After changing the Gradle files, reload the Gradle project in your IDE before using its run configurations.
 4. Answer Nitea's consent screen, then in game use the Faulty Wand from the "Nitea Example" creative tab, or the `/em` command:
 
 | Command | What it does |

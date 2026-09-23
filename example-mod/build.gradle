@@ -34,6 +34,16 @@ base {
     archivesName = mod_id
 }
 
+// Nitea for NeoForge, compiled from ../nitea-neoforge as a second mod of this build. It reuses this project's
+// Minecraft setup, so the example runs without building nitea-neoforge on its own. A real mod instead embeds the
+// published jar: jarJar(implementation("cc.nitea:nitea-neoforge")) { version { strictly '[0.2.0,1.0.0)' } }
+sourceSets {
+    nitea {
+        java.srcDir '../nitea-neoforge/src/main/java'
+        resources.srcDir '../nitea-neoforge/src/main/resources'
+    }
+}
+
 // Mojang ships Java 25 to end users in 26.2, so mods should target Java 25.
 java.toolchain.languageVersion = JavaLanguageVersion.of(25)
 
@@ -99,8 +109,14 @@ neoForge {
         "${mod_id}" {
             sourceSet(sourceSets.main)
         }
+        // Nitea's own mod (consent screen, title screen button), see the "nitea" source set above
+        "nitea" {
+            sourceSet(sourceSets.nitea)
+        }
     }
 }
+
+neoForge.addModdingDependenciesTo(sourceSets.nitea)
 
 // Sets up a dependency configuration called 'localRuntime'.
 // This configuration should be used instead of 'runtimeOnly' to declare
@@ -111,14 +127,17 @@ configurations {
 }
 
 dependencies {
-    // Nitea for NeoForge, embedded in the mod jar with Jar-in-Jar (it brings the nitea-java library with it).
-    // NeoForge loads a single copy, the newest, when several mods ship it, so every mod can bundle it safely.
-    jarJar(implementation("cc.nitea:nitea-neoforge")) {
+    // The Nitea library, embedded in the mod jar with Jar-in-Jar. NeoForge picks the newest copy when several
+    // mods ship it, so every mod can bundle it safely.
+    jarJar(implementation("cc.nitea:nitea-java")) {
         version {
             strictly '[0.2.0,1.0.0)'
             prefer '0.2.0'
         }
     }
+    niteaImplementation "cc.nitea:nitea-java:0.2.0"
+    // Loads Nitea's mod next to this one when running the game from this project
+    localRuntime sourceSets.nitea.output
 
     // Example optional mod dependency with JEI
     // The JEI API is declared for compile time use, while the full JEI artifact is used at runtime
@@ -160,6 +179,22 @@ var generateModMetadata = tasks.register("generateModMetadata", ProcessResources
     from "src/main/templates"
     into "build/generated/sources/modMetadata"
 }
+// Nitea's neoforge.mods.toml, from the same template and versions as ../nitea-neoforge
+var generateNiteaModMetadata = tasks.register("generateNiteaModMetadata", ProcessResources) {
+    var replaceProperties = [
+            minecraft_version_range: minecraft_version_range,
+            neo_version            : neo_version,
+            mod_id                 : 'nitea',
+            mod_version            : '0.2.0',
+    ]
+    inputs.properties replaceProperties
+    expand replaceProperties
+    from "../nitea-neoforge/src/main/templates"
+    into "build/generated/sources/niteaModMetadata"
+}
+sourceSets.nitea.resources.srcDir generateNiteaModMetadata
+neoForge.ideSyncTask generateNiteaModMetadata
+
 // Include the output of "generateModMetadata" as an input directory for the build
 // this works with both building through Gradle and the IDE.
 sourceSets.main.resources.srcDir generateModMetadata
