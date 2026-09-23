@@ -1,0 +1,29 @@
+modLoader="javafml"
+loaderVersion="[1,)"
+license="MIT"
+issueTrackerURL="https://nitea.cc"
+
+[[mods]]
+modId="${mod_id}"
+version="${mod_version}"
+displayName="Nitea"
+logoFile="nitea_logo.png"
+displayURL="https://nitea.cc"
+authors="Nitea"
+description='''
+Anonymous error reporting for Minecraft mods. Bundled by mods that use Nitea: it asks once whether you allow reports, for all of them, and adds a Nitea button to the title screen where you can change your mind.
+'''
+
+[[dependencies.${mod_id}]]
+    modId="neoforge"
+    type="required"
+    versionRange="[${neo_version},)"
+    ordering="NONE"
+    side="BOTH"
+
+[[dependencies.${mod_id}]]
+    modId="minecraft"
+    type="required"
+    versionRange="${minecraft_version_range}"
+    ordering="NONE"
+    side="BOTH"

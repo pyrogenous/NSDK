@@ -1,0 +1,90 @@
+plugins {
+    id 'java-library'
+    id 'maven-publish'
+    id 'net.neoforged.moddev' version '2.0.147'
+}
+
+version = mod_version
+group = 'cc.nitea'
+
+base {
+    archivesName = 'nitea-neoforge'
+}
+
+java.toolchain.languageVersion = JavaLanguageVersion.of(25)
+java {
+    withSourcesJar()
+}
+
+neoForge {
+    version = project.neo_version
+
+    runs {
+        client {
+            client()
+        }
+        server {
+            server()
+            programArgument '--nogui'
+        }
+    }
+
+    mods {
+        "${mod_id}" {
+            sourceSet(sourceSets.main)
+        }
+    }
+}
+
+dependencies {
+    // The loader-independent library. Embedded with Jar-in-Jar, so mods only need to bundle this jar.
+    jarJar(api("cc.nitea:nitea-java")) {
+        version {
+            strictly '[0.2.0,1.0.0)'
+            prefer '0.2.0'
+        }
+    }
+}
+
+var generateModMetadata = tasks.register("generateModMetadata", ProcessResources) {
+    var replaceProperties = [
+            minecraft_version_range: minecraft_version_range,
+            neo_version            : neo_version,
+            mod_id                 : mod_id,
+            mod_version            : mod_version,
+    ]
+    inputs.properties replaceProperties
+    expand replaceProperties
+    from "src/main/templates"
+    into "build/generated/sources/modMetadata"
+}
+sourceSets.main.resources.srcDir generateModMetadata
+neoForge.ideSyncTask generateModMetadata
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+}
+
+publishing {
+    publications {
+        register('mavenJava', MavenPublication) {
+            artifactId = 'nitea-neoforge'
+            from components.java
+            pom {
+                name = 'Nitea for NeoForge'
+                description = 'Error reporting and player feedback for NeoForge mods, with the in-game consent screens'
+                url = 'https://nitea.cc'
+            }
+        }
+    }
+}
+
+// The files offered as "Download NSDK for NeoForge" on the website: this mod (with the library nested inside) and
+// the library itself, which mods compile against
+tasks.register('nsdk', Copy) {
+    from tasks.named('jar')
+    from(configurations.compileClasspath) {
+        include 'nitea-java-*.jar'
+    }
+    into layout.buildDirectory.dir('nsdk')
+}
