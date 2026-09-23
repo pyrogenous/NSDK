@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="nitea-neoforge/src/main/resources/nitea_logo.png" alt="Nitea" width="96">
+  <img src=".github/logo.png" alt="Nitea" width="96">
 </p>
 
 <h1 align="center">Nitea for Minecraft mods</h1>
@@ -24,7 +24,7 @@ Nitea is a small library you embed in your mod. It reports errors, uncaught exce
 | Folder | What it is |
 | ------ | ---------- |
 | [`nitea-java/`](nitea-java) | The core library: plain Java 17, no dependencies, works on any loader. Capturing, grouping, attribution, consent and sending. |
-| [`nitea-neoforge/`](nitea-neoforge) | Nitea as a NeoForge mod (mod ID `nitea`): the consent screen and the title screen button. Embeds the core. |
+| [`nitea-neoforge/`](nitea-neoforge) | The NeoForge integration: the consent screen and the title screen button. A game library, not a mod: it isn't in the mod list, and the core starts it from `Nitea.init`. |
 | [`example-mod/`](example-mod) | A NeoForge 26.2 test mod that embeds Nitea and triggers errors, crashes and player reports on demand. |
 
 ## Player consent
@@ -55,7 +55,7 @@ examplemod.enabled=false   # optional: turn off a single mod
 
 Mods don't talk to each other, so Nitea makes sure they don't need to:
 
-- **One copy.** Every NeoForge mod bundles `nitea-neoforge` with Jar-in-Jar. NeoForge loads a single copy, the newest, so there's one `nitea` mod, one consent screen and one title screen button.
+- **One copy.** Every NeoForge mod bundles `nitea-java` and `nitea-neoforge` with Jar-in-Jar. NeoForge loads a single copy of each, the newest, so there's one consent screen and one title screen button. Nitea is a library: it never shows up as a mod.
 - **Shared state.** Even when a mod shades its own copy of the core, every copy shares the same state: the consent, the installation ID and the list of mods using Nitea live in one JVM-wide registry made only of JDK types, readable whatever class loader loaded the copy. Changing the consent from any copy updates all of them at once.
 - **Attribution.** Each mod registers its packages (and, on NeoForge, its Java module). When an uncaught exception or a Minecraft crash happens, Nitea starts from the root cause and walks the stack past JDK, Minecraft and loader frames. The first frame left decides:
   - it belongs to a mod using Nitea: only that mod reports it;
@@ -67,6 +67,13 @@ Mods don't talk to each other, so Nitea makes sure they don't need to:
 Exceptions you pass to `captureException` yourself are always reported by your mod: you chose to send them.
 
 ## Using Nitea in your mod (NeoForge)
+
+### Why two jars?
+
+- `nitea-java` is the core: plain Java, no Minecraft classes, so the same jar works on every loader and Minecraft version.
+- `nitea-neoforge` holds the screens, which need Minecraft's GUI classes and change with each Minecraft version. It's tiny, and Fabric or Forge get their own later without touching the core.
+
+Your mod calls the core only (`Nitea.init`, `NiteaClient`); the core finds and starts the NeoForge integration on its own.
 
 ### 1. Add the dependency
 
@@ -85,12 +92,12 @@ repositories {
 }
 
 dependencies {
-    // Brings the core library with it, and bundles both in your jar
+    // Bundled in your jar with Jar-in-Jar; NeoForge keeps one copy of each when several mods ship them
+    jarJar(implementation("cc.nitea:nitea-java")) {
+        version { strictly '[0.2.0,1.0.0)'; prefer '0.2.0' }
+    }
     jarJar(implementation("cc.nitea:nitea-neoforge")) {
-        version {
-            strictly '[0.2.0,1.0.0)'
-            prefer '0.2.0'
-        }
+        version { strictly '[0.2.0,1.0.0)'; prefer '0.2.0' }
     }
 }
 ```
@@ -190,7 +197,7 @@ cd nitea-neoforge && ./gradlew nsdk      # the files offered as "Download NSDK" 
 
 1. On [nitea.cc](https://nitea.cc), create a project with mod ID `niteaexample` and copy its SDK key.
 2. Copy `example-mod/.env.example` to `example-mod/.env` and paste the key.
-3. From `example-mod/`, run `./gradlew runClient`. The library is built from `nitea-java/`, and Nitea's NeoForge mod is compiled from `nitea-neoforge/` as a second mod of the example (it reuses the example's Minecraft setup). After changing the Gradle files, reload the Gradle project in your IDE before using its run configurations.
+3. From `example-mod/`, run `./gradlew runClient`. The library is built from `nitea-java/`, and the NeoForge integration is compiled from `nitea-neoforge/` into the example (it reuses the example's Minecraft setup). After changing the Gradle files, reload the Gradle project in your IDE before using its run configurations.
 4. Answer Nitea's consent screen, then in game use the Faulty Wand from the "Nitea Example" creative tab, or the `/em` command:
 
 | Command | What it does |

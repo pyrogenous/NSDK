@@ -27,7 +27,7 @@ public final class NiteaConsentScreen extends Screen {
     private HeaderAndFooterLayout layout;
 
     public NiteaConsentScreen(Screen parent, boolean firstTime) {
-        super(Component.translatable(firstTime ? "nitea.consent.title" : "nitea.preferences.title"));
+        super(firstTime ? NiteaText.CONSENT_TITLE : NiteaText.PREFERENCES_TITLE);
         this.parent = parent;
         this.firstTime = firstTime;
     }
@@ -39,25 +39,25 @@ public final class NiteaConsentScreen extends Screen {
 
         LinearLayout content = layout.addToContents(LinearLayout.vertical().spacing(8));
         content.defaultCellSetting().alignHorizontallyCenter();
-        if (!firstTime) content.addChild(text(Component.translatable("nitea.preferences.status", status())));
-        content.addChild(text(Component.translatable("nitea.consent.intro")));
+        if (!firstTime) content.addChild(text(Component.literal(NiteaText.STATUS).append(status())));
+        content.addChild(text(NiteaText.INTRO));
         content.addChild(text(modNames()));
-        content.addChild(text(Component.translatable("nitea.consent.details").withColor(GRAY)));
-        content.addChild(text(Component.translatable("nitea.consent.change").withColor(GRAY)));
+        content.addChild(text(NiteaText.DETAILS.copy().withColor(GRAY)));
+        content.addChild(text(NiteaText.CHANGE.copy().withColor(GRAY)));
 
         LinearLayout footer = layout.addToFooter(LinearLayout.vertical().spacing(4));
         footer.defaultCellSetting().alignHorizontallyCenter();
         LinearLayout choice = footer.addChild(LinearLayout.horizontal().spacing(8));
         NiteaConsent.State state = NiteaConsent.state();
-        Button allow = choice.addChild(Button.builder(Component.translatable("nitea.consent.allow"), b -> choose(true)).build());
+        Button allow = choice.addChild(Button.builder(NiteaText.ALLOW, b -> choose(true)).build());
         Button deny = choice.addChild(Button.builder(
-                Component.translatable(firstTime ? "nitea.consent.deny" : "nitea.preferences.stop"), b -> choose(false)).build());
+                firstTime ? NiteaText.DENY : NiteaText.STOP, b -> choose(false)).build());
         if (!firstTime) {
             allow.active = state != NiteaConsent.State.GRANTED;
             deny.active = state != NiteaConsent.State.DENIED;
         }
         LinearLayout other = footer.addChild(LinearLayout.horizontal().spacing(8));
-        other.addChild(Button.builder(Component.translatable("nitea.consent.privacy"), ConfirmLinkScreen.confirmLink(this, PRIVACY_POLICY)).build());
+        other.addChild(Button.builder(NiteaText.PRIVACY, ConfirmLinkScreen.confirmLink(this, PRIVACY_POLICY)).build());
         if (!firstTime) other.addChild(Button.builder(CommonComponents.GUI_DONE, b -> onClose()).build());
 
         layout.visitWidgets(this::addRenderableWidget);
@@ -82,9 +82,9 @@ public final class NiteaConsentScreen extends Screen {
 
     private static Component status() {
         return switch (NiteaConsent.state()) {
-            case GRANTED -> Component.translatable("nitea.preferences.status.granted").withColor(0xFF55FF55);
-            case DENIED -> Component.translatable("nitea.preferences.status.denied").withColor(0xFFFF5555);
-            case UNDECIDED -> Component.translatable("nitea.preferences.status.undecided").withColor(0xFFFFFF55);
+            case GRANTED -> NiteaText.STATUS_GRANTED.copy().withColor(0xFF55FF55);
+            case DENIED -> NiteaText.STATUS_DENIED.copy().withColor(0xFFFF5555);
+            case UNDECIDED -> NiteaText.STATUS_UNDECIDED.copy().withColor(0xFFFFFF55);
         };
     }
 

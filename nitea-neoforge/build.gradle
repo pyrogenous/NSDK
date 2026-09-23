@@ -4,7 +4,7 @@ plugins {
     id 'net.neoforged.moddev' version '2.0.147'
 }
 
-version = mod_version
+version = project.nitea_version
 group = 'cc.nitea'
 
 base {
@@ -16,50 +16,28 @@ java {
     withSourcesJar()
 }
 
+// Only used to compile against Minecraft and NeoForge: this jar is a library, not a mod
 neoForge {
     version = project.neo_version
-
-    runs {
-        client {
-            client()
-        }
-        server {
-            server()
-            programArgument '--nogui'
-        }
-    }
-
-    mods {
-        "${mod_id}" {
-            sourceSet(sourceSets.main)
-        }
-    }
 }
 
 dependencies {
-    // The loader-independent library. Embedded with Jar-in-Jar, so mods only need to bundle this jar.
-    jarJar(api("cc.nitea:nitea-java")) {
-        version {
-            strictly '[0.2.0,1.0.0)'
-            prefer '0.2.0'
-        }
-    }
+    // The loader-independent core. Mods bundle both jars with Jar-in-Jar (see README)
+    api "cc.nitea:nitea-java:${project.nitea_version}"
 }
 
-var generateModMetadata = tasks.register("generateModMetadata", ProcessResources) {
-    var replaceProperties = [
-            minecraft_version_range: minecraft_version_range,
-            neo_version            : neo_version,
-            mod_id                 : mod_id,
-            mod_version            : mod_version,
-    ]
-    inputs.properties replaceProperties
-    expand replaceProperties
-    from "src/main/templates"
-    into "build/generated/sources/modMetadata"
+tasks.named('jar', Jar) {
+    manifest {
+        attributes(
+                'Automatic-Module-Name': 'cc.nitea.neoforge',
+                // A game library: loaded next to Minecraft so it can use its classes, but not a mod (no mod list
+                // entry, no neoforge.mods.toml). The core starts it from Nitea.init.
+                'FMLModType': 'GAMELIBRARY',
+                'Implementation-Title': 'Nitea for NeoForge',
+                'Implementation-Version': project.version,
+        )
+    }
 }
-sourceSets.main.resources.srcDir generateModMetadata
-neoForge.ideSyncTask generateModMetadata
 
 tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8'
@@ -72,18 +50,17 @@ publishing {
             from components.java
             pom {
                 name = 'Nitea for NeoForge'
-                description = 'Error reporting and player feedback for NeoForge mods, with the in-game consent screens'
+                description = 'NeoForge integration of Nitea: the in-game consent screen and title screen button'
                 url = 'https://nitea.cc'
             }
         }
     }
 }
 
-// The files offered as "Download NSDK for NeoForge" on the website: this mod (with the library nested inside) and
-// the library itself, which mods compile against
+// The files offered as "Download NSDK for NeoForge" on the website: this jar and the core it needs
 tasks.register('nsdk', Copy) {
     from tasks.named('jar')
-    from(configurations.compileClasspath) {
+    from(configurations.runtimeClasspath) {
         include 'nitea-java-*.jar'
     }
     into layout.buildDirectory.dir('nsdk')
