@@ -9,4 +9,9 @@ public final class Text {
         if (value == null || value.length() <= max) return value;
         return value.substring(0, max - 1) + "…";
     }
+
+    /** True when {@code value} is empty or only whitespace (Java 8 has no String.isBlank). */
+    public static boolean isBlank(String value) {
+        return value.trim().isEmpty();
+    }
 }

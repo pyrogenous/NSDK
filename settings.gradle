@@ -1,12 +1,11 @@
-pluginManagement {
-    repositories {
-        gradlePluginPortal()
+// Nitea for NeoForge, Forge and Fabric. Every artifact is its own Gradle build in versions/<minecraft>/<loader>/, so
+// each can use the loader plugin and Java version its era needs. They all compile the loader-independent sources in
+// core/, and the ones for the same Minecraft version share their in-game screens in versions/<minecraft>/common/.
+rootProject.name = 'nitea'
+
+includeBuild 'core'
+file('versions').listFiles().findAll { it.isDirectory() }.sort().each { minecraft ->
+    minecraft.listFiles().findAll { new File(it, 'build.gradle').isFile() }.sort().each { loader ->
+        includeBuild(loader) { name = "${loader.name}-${minecraft.name}" }
     }
 }
-
-plugins {
-    // Downloads the JDK 25 the build needs when it isn't installed (e.g. on JitPack)
-    id 'org.gradle.toolchains.foojay-resolver-convention' version '1.0.0'
-}
-
-rootProject.name = 'nitea-neoforge'

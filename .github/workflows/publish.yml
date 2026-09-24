@@ -1,0 +1,56 @@
+# Builds every artifact and publishes them as a Maven repository on GitHub Pages:
+#   https://pyrogenous.github.io/NSDK  ->  cc.nitea:nitea-<loader>-<minecraft>:<version>
+# Runs when a version tag is pushed (git tag 0.3.0 && git push origin 0.3.0); the tag is the version.
+# Can also be started by hand from the Actions tab, which publishes the version in gradle.properties.
+name: Publish
+
+on:
+  push:
+    tags: ['*']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+# Two publishes at once would overwrite each other's gh-pages commit
+concurrency:
+  group: publish
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+
+      # Every JDK the builds use (Minecraft 1.20.1, 1.21.x, 26.x); the last one runs Gradle
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: |
+            17
+            25
+            21
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      # Start from what's already published, so older versions stay and maven-metadata.xml lists them all
+      - name: Fetch the published repository
+        run: |
+          git clone --depth 1 --branch gh-pages "https://github.com/${{ github.repository }}.git" build/repo || mkdir -p build/repo
+          rm -rf build/repo/.git
+
+      - name: Build, test and publish every artifact to build/repo
+        run: ./gradlew publishAll --stacktrace
+        env:
+          NITEA_VERSION: ${{ github.ref_type == 'tag' && github.ref_name || '' }}
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: gh-pages
+          publish_dir: build/repo
+          keep_files: true
+          commit_message: Publish ${{ github.ref_name }}

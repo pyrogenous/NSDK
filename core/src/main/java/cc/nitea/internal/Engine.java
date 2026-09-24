@@ -5,9 +5,13 @@ import java.io.Reader;
 import java.io.Writer;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.lang.reflect.Method;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -42,30 +46,33 @@ public final class Engine {
     public static final String DENIED = "denied";
 
     private static final String KEY = "cc.nitea.engine.v1";
-    private static final String HEADER = """
-             Nitea: anonymous error reporting for Minecraft mods (https://nitea.cc)
-             Mods using Nitea can send crash and error reports to their developers, only if you allow it.
-             Reports never include usernames, player UUIDs or IP addresses.
-
-             consent=granted sends reports, consent=denied never sends anything. Without it, you are asked in game
-             (on a dedicated server, nothing is sent until you set it). Change it any time from the Nitea button on
-             the title screen.
-             To turn off a single mod, add <modid>.enabled=false
-             installationId is random, only exists while reporting is allowed, and counts how many installations an
-             issue affects.""";
+    private static final String HEADER = String.join("\n",
+            " Nitea: anonymous error reporting for Minecraft mods (https://nitea.cc)",
+            " Mods using Nitea can send crash and error reports to their developers, only if you allow it.",
+            " Reports never include usernames, player UUIDs or IP addresses.",
+            "",
+            " consent=granted sends reports, consent=denied never sends anything. Without it, you are asked in game",
+            " (on a dedicated server, nothing is sent until you set it). Change it any time from the Nitea button on",
+            " the title screen.",
+            " To turn off a single mod, add <modid>.enabled=false",
+            " installationId is random, only exists while reporting is allowed, and counts how many installations an",
+            " issue affects.");
 
     // Classes that belong to the game, the loader, the JDK or common libraries: never the cause of an error
     private static final String[] PLATFORM_PACKAGES = {
         "java.", "javax.", "jdk.", "sun.", "com.sun.", "net.minecraft.", "com.mojang.", "net.neoforged.",
         "net.minecraftforge.", "cpw.mods.", "net.fabricmc.", "org.quiltmc.", "org.spongepowered.", "com.llamalad7.",
         "org.objectweb.", "io.netty.", "com.google.", "org.apache.", "org.slf4j.", "it.unimi.", "org.lwjgl.", "org.joml.",
-        "kotlin.", "org.jetbrains.", "com.electronwill.", "oshi.", "org.jline.", "cc.nitea.internal.",
+        "kotlin.", "org.jetbrains.", "com.electronwill.", "oshi.", "org.jline.", "paulscode.", "scala.", "gnu.trove.",
+        "com.typesafe.", "com.ibm.icu.", "LZMA.", "cc.nitea.internal.",
     };
-    private static final Set<String> PLATFORM_MODULES = Set.of(
-            "minecraft", "neoforge", "forge", "fml_loader", "fml_earlydisplay", "loader", "mixin", "mixinextras", "nitea");
+    private static final Set<String> PLATFORM_MODULES = Collections.unmodifiableSet(new HashSet<>(Arrays.asList(
+            "minecraft", "neoforge", "forge", "fml_loader", "fml_earlydisplay", "loader", "mixin", "mixinextras", "nitea")));
+    // StackTraceElement.getModuleName() only exists from Java 9
+    private static final Method MODULE_NAME = moduleNameMethod();
     // Methods Mixin merges into game classes: handler$abc000$modid$method (and redirect$, modify$, wrap...)
     private static final Pattern MIXIN_METHOD = Pattern.compile(
-            "^(?:handler|redirect|modify|localvar|constant|args|wrapOperation|wrapWithCondition|modifyExpressionValue|modifyReturnValue|modifyArg|modifyArgs|modifyVariable)\\$[a-z0-9]+\\$([a-z][a-z0-9_]{1,63})\\$");
+            "^(?:handler|redirect|modify|localvar|constant|args|wrapOperation|wrapWithCondition|modifyExpressionValue|modifyReturnValue|modifyArg|modifyArgs|modifyVariable)\\$[a-z0-9]+\\$([a-z][a-z0-9_-]{1,63})\\$");
 
     private Engine() {}
 
@@ -130,7 +137,7 @@ public final class Engine {
 
     public static Path gameDir() {
         String dir = gameDirRef().get();
-        return dir != null ? Path.of(dir) : Path.of("").toAbsolutePath();
+        return dir != null ? Paths.get(dir) : Paths.get("").toAbsolutePath();
     }
 
     public static Path settingsFile() {
@@ -260,7 +267,7 @@ public final class Engine {
 
     /** Registers a mod using Nitea: its packages and, when named, the Java module of its classes. */
     public static void registerMod(String modId, List<String> packages, String module) {
-        modPackages().put(modId, List.copyOf(packages));
+        modPackages().put(modId, Collections.unmodifiableList(new ArrayList<>(packages)));
         if (module != null && !module.isEmpty()) modModules().put(modId, module);
     }
 
@@ -281,7 +288,7 @@ public final class Engine {
         Collections.reverse(chain);
         for (Throwable t : chain) {
             List<String[]> frames = new ArrayList<>();
-            for (StackTraceElement e : t.getStackTrace()) frames.add(new String[] {e.getClassName(), e.getMethodName(), e.getModuleName()});
+            for (StackTraceElement e : t.getStackTrace()) frames.add(new String[] {e.getClassName(), e.getMethodName(), moduleName(e)});
             String owner = owner(frames);
             if (owner != null) return owner.isEmpty() ? null : owner;
         }
@@ -366,6 +373,8 @@ public final class Engine {
         if (module != null && (PLATFORM_MODULES.contains(module) || module.startsWith("java.") || module.startsWith("jdk."))) return true;
         // The library's public classes (cc.nitea.Nitea...), not mods that happen to live under cc.nitea
         if (className.startsWith("cc.nitea.") && className.indexOf('.', "cc.nitea.".length()) < 0) return true;
+        // Obfuscated game classes (Forge before 1.17 at runtime) have no package
+        if (className.indexOf('.') < 0) return true;
         for (String pkg : PLATFORM_PACKAGES) {
             if (className.startsWith(pkg)) return true;
         }
@@ -373,6 +382,34 @@ public final class Engine {
     }
 
     // ------------------------------------------------------------------------------------------------------------
+
+    private static Method moduleNameMethod() {
+        try {
+            return StackTraceElement.class.getMethod("getModuleName");
+        } catch (NoSuchMethodException e) {
+            return null;
+        }
+    }
+
+    /** The named Java module of a class (NeoForge puts mods in named modules), or null. Always null on Java 8. */
+    public static String moduleName(Class<?> type) {
+        try {
+            Object module = Class.class.getMethod("getModule").invoke(type);
+            if (!(Boolean) module.getClass().getMethod("isNamed").invoke(module)) return null;
+            return (String) module.getClass().getMethod("getName").invoke(module);
+        } catch (ReflectiveOperationException | RuntimeException e) {
+            return null;
+        }
+    }
+
+    private static String moduleName(StackTraceElement element) {
+        if (MODULE_NAME == null) return null;
+        try {
+            return (String) MODULE_NAME.invoke(element);
+        } catch (ReflectiveOperationException e) {
+            return null;
+        }
+    }
 
     static Properties read(Path file) {
         Properties props = new Properties();

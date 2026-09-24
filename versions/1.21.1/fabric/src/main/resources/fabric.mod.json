@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "id": "nitea",
+  "version": "${version}",
+  "name": "Nitea",
+  "description": "Opt-in, anonymous error reporting and player feedback for the mods that bundle it.",
+  "contact": {
+    "homepage": "https://nitea.cc",
+    "sources": "https://github.com/pyrogenous/NSDK"
+  },
+  "environment": "*",
+  "mixins": [
+    {
+      "config": "nitea.mixins.json",
+      "environment": "client"
+    }
+  ],
+  "depends": {
+    "fabricloader": ">=0.15.0",
+    "minecraft": "1.21.1",
+    "java": ">=21"
+  },
+  "custom": {
+    "modmenu": {
+      "badges": ["library"]
+    }
+  }
+}

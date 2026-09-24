@@ -1,0 +1,27 @@
+plugins {
+    id 'java-library'
+    id 'maven-publish'
+    id 'net.neoforged.moddev' version '2.0.147'
+}
+
+ext.niteaLoader = 'neoforge'
+ext.niteaMinecraft = '26.2'
+apply from: '../../../gradle/nitea-module.gradle'
+
+java.toolchain.languageVersion = JavaLanguageVersion.of(25)
+
+// Only used to compile against Minecraft and NeoForge: Nitea is a library, not a mod
+neoForge {
+    version = '26.2.0.88'
+}
+
+tasks.named('jar', Jar) {
+    manifest {
+        attributes(
+                'Automatic-Module-Name': 'cc.nitea',
+                // A game library: loaded next to Minecraft so it can use its classes, but not a mod (no mod list
+                // entry, no neoforge.mods.toml). Nitea.init starts its screens.
+                'FMLModType': 'GAMELIBRARY',
+        )
+    }
+}

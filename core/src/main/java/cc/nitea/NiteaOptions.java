@@ -1,7 +1,9 @@
 package cc.nitea;
 
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -56,11 +58,12 @@ public final class NiteaOptions {
         endpoint = b.endpoint;
         release = b.release;
         environment = b.environment;
-        gameDir = b.gameDir != null ? b.gameDir : Path.of("").toAbsolutePath();
+        gameDir = b.gameDir != null ? b.gameDir : Paths.get("").toAbsolutePath();
         owner = b.owner;
         List<String> packages = new ArrayList<>(b.inAppPackages);
         // The owner's package is the mod's own code unless told otherwise
-        if (packages.isEmpty() && owner != null && !owner.getPackageName().isEmpty()) packages.add(owner.getPackageName());
+        String ownerPackage = owner != null && owner.getName().lastIndexOf('.') > 0 ? owner.getName().substring(0, owner.getName().lastIndexOf('.')) : "";
+        if (packages.isEmpty() && !ownerPackage.isEmpty()) packages.add(ownerPackage);
         inAppPackages = Collections.unmodifiableList(packages);
         tags = Collections.unmodifiableMap(new LinkedHashMap<>(b.tags));
         minecraftVersion = b.minecraftVersion;
@@ -74,7 +77,7 @@ public final class NiteaOptions {
         openReportLinks = b.openReportLinks;
     }
 
-    /** Starts the options for a mod, using the same ID as in {@code fabric.mod.json} / {@code neoforge.mods.toml}. */
+    /** Starts the options for a mod, using the same ID as in {@code fabric.mod.json}, {@code neoforge.mods.toml} or {@code mods.toml}. */
     public static Builder builder(String modId) {
         return new Builder(modId);
     }
@@ -105,7 +108,7 @@ public final class NiteaOptions {
 
         private Builder(String modId) {
             this.modId = Objects.requireNonNull(modId, "modId");
-            if (!modId.matches("[a-z][a-z0-9_]{1,63}")) throw new IllegalArgumentException("Invalid mod ID: " + modId);
+            if (!modId.matches("[a-z][a-z0-9_-]{1,63}")) throw new IllegalArgumentException("Invalid mod ID: " + modId);
         }
 
         /** The project's SDK key ({@code nt_...}). Prefer the build-time {@code .env} over hardcoding it. */
@@ -149,7 +152,7 @@ public final class NiteaOptions {
 
         /** Packages of the mod's own code. Replaces the default (the owner's package). */
         public Builder inAppPackages(String... packages) {
-            inAppPackages.addAll(List.of(packages));
+            inAppPackages.addAll(Arrays.asList(packages));
             return this;
         }
 

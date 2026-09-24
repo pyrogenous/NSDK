@@ -1,0 +1,29 @@
+plugins {
+    id 'java-library'
+    id 'maven-publish'
+    id 'net.neoforged.moddev.legacyforge' version '2.0.147'
+}
+
+ext.niteaLoader = 'neoforge'
+ext.niteaMinecraft = '1.20.1'
+apply from: '../../../gradle/nitea-module.gradle'
+
+java.toolchain.languageVersion = JavaLanguageVersion.of(17)
+
+// NeoForge for 1.20.1 is a fork of Forge 47 and still uses Forge's packages and SRG names at runtime. The jar is
+// reobfuscated to SRG, and mods depend on it through modImplementation, which maps it back.
+legacyForge {
+    enable {
+        neoForgeVersion = '1.20.1-47.1.106'
+        disableRecompilation = true
+    }
+}
+
+tasks.named('jar', Jar) {
+    manifest {
+        attributes(
+                // A game library, not a mod: no mods.toml, no mod list entry. Nitea.init starts its screens.
+                'FMLModType': 'GAMELIBRARY',
+        )
+    }
+}

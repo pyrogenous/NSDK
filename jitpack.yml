@@ -1,5 +1,6 @@
-# JitPack builds the library at the root of this repository: com.github.<user>:<repo>:<tag>
-# Gradle downloads the JDK 25 the build needs through its toolchain settings.
+# JitPack builds every artifact of this repository and serves each as
+# com.github.pyrogenous.NSDK:nitea-<loader>-<minecraft>:<tag>.
+# Gradle runs on JDK 21 and downloads the JDKs the builds need (17, 21, 25) through its toolchain settings.
 jdk:
   - openjdk21
 install:

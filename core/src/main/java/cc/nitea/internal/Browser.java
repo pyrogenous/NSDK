@@ -9,6 +9,11 @@ import java.util.Locale;
 public final class Browser {
     private Browser() {}
 
+    /** Opens a link from Nitea's own screens (e.g. the privacy policy). */
+    public static boolean open(String url) {
+        return open(url, new Log("nitea", false));
+    }
+
     public static boolean open(String url, Log log) {
         // Only plain web links, never anything the OS could interpret as a command
         if (url == null || !url.matches("https?://[\\w.:-]+(/[\\w./~%?&=+#-]*)?")) return false;

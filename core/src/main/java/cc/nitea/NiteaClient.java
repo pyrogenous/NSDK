@@ -5,6 +5,7 @@ import cc.nitea.internal.CrashReports;
 import cc.nitea.internal.Engine;
 import cc.nitea.internal.Json;
 import cc.nitea.internal.Log;
+import cc.nitea.internal.Maps;
 import cc.nitea.internal.Platform;
 import cc.nitea.internal.RateLimiter;
 import cc.nitea.internal.Settings;
@@ -60,7 +61,7 @@ public final class NiteaClient {
         if (!Engine.modEnabled(options.modId)) {
             log.info("Reporting for this mod is turned off in config/nitea/nitea.properties");
             transport = null;
-        } else if (sdkKey == null || sdkKey.isBlank()) {
+        } else if (sdkKey == null || Text.isBlank(sdkKey)) {
             log.warn("No SDK key found, reporting is off. Put sdkKey=nt_... in src/main/resources/nitea/" + options.modId + ".properties (see the Nitea docs).");
             transport = null;
         } else {
@@ -101,7 +102,7 @@ public final class NiteaClient {
 
     /** Reports a caught exception with the given level. Returns the event ID, or null when nothing was sent. */
     public UUID captureException(Throwable throwable, Level level) {
-        return captureException(throwable, level, Map.of());
+        return captureException(throwable, level, Maps.of());
     }
 
     /** Reports a caught exception with extra tags for this event only. */
@@ -110,15 +111,15 @@ public final class NiteaClient {
         String signature = signature(throwable);
         if (!limiter.allow(signature)) return null;
         Map<String, Object> event = event("error", level, null, extraTags);
-        event.put("exception", Map.of("values", traces.values(throwable)));
+        event.put("exception", Maps.of("values", traces.values(throwable)));
         return send(event, false);
     }
 
     /** Reports a message that is not an exception, e.g. a failed sanity check. */
     public UUID captureMessage(String message, Level level) {
-        if (message == null || message.isBlank() || !capturing()) return null;
+        if (message == null || Text.isBlank(message) || !capturing()) return null;
         if (!limiter.allow("message:" + message)) return null;
-        return send(event("error", level, message, Map.of()), false);
+        return send(event("error", level, message, Maps.of()), false);
     }
 
     // ------------------------------------------------------------------------------------------------------------
@@ -151,14 +152,14 @@ public final class NiteaClient {
     }
 
     private UUID report(String kind, Level level, String text, Consumer<String> onCompletionLink) {
-        if (text == null || text.isBlank() || transport == null) return null;
+        if (text == null || Text.isBlank(text) || transport == null) return null;
         // The player is waiting for a link, so reports are never held back: they need consent now
         if (!isEnabled()) {
             log.info("Player " + kind + " report not sent: the player hasn't allowed Nitea reports");
             return null;
         }
         if (!limiter.allow(kind)) return null;
-        Map<String, Object> event = event(kind, level, text.trim(), Map.of());
+        Map<String, Object> event = event(kind, level, text.trim(), Maps.of());
         UUID id = UUID.fromString((String) event.get("eventId"));
         event.put("installationId", Engine.installationId());
         transport.send(Json.write(event), reply -> {
@@ -225,8 +226,8 @@ public final class NiteaClient {
         String name = thread.getName();
         // An exception escaping the game's main threads takes the game down with it
         boolean fatal = name.equals("main") || name.equals("Render thread") || name.equals("Server thread");
-        Map<String, Object> event = event(fatal ? "crash" : "error", fatal ? Level.FATAL : Level.ERROR, null, Map.of("thread", name, "mechanism", "uncaught"));
-        event.put("exception", Map.of("values", traces.values(throwable)));
+        Map<String, Object> event = event(fatal ? "crash" : "error", fatal ? Level.FATAL : Level.ERROR, null, Maps.of("thread", name, "mechanism", "uncaught"));
+        event.put("exception", Maps.of("values", traces.values(throwable)));
         send(event, true);
     }
 
@@ -263,10 +264,10 @@ public final class NiteaClient {
         if (!isEnabled() || !options.scanCrashReports) return;
         transport.background(() -> {
             for (CrashReports.Found crash : CrashReports.scan(options.gameDir, options.modId, settings)) {
-                Map<String, Object> event = event("crash", Level.FATAL, crash.description(), Map.of("mechanism", "crash-report", "crash_report", crash.fileName()));
+                Map<String, Object> event = event("crash", Level.FATAL, crash.description(), Maps.of("mechanism", "crash-report", "crash_report", crash.fileName()));
                 event.put("timestamp", crash.time().truncatedTo(ChronoUnit.MILLIS).toString());
                 List<Map<String, Object>> values = traces.parse(crash.text());
-                if (!values.isEmpty()) event.put("exception", Map.of("values", values));
+                if (!values.isEmpty()) event.put("exception", Maps.of("values", values));
                 // Breadcrumbs belong to this launch, not the one that crashed
                 event.remove("breadcrumbs");
                 send(event, false);
@@ -320,7 +321,7 @@ public final class NiteaClient {
     private Map<String, Object> contexts(Platform p) {
         Map<String, Object> contexts = new LinkedHashMap<>();
         String mc = first(options.minecraftVersion, p.minecraftVersion);
-        if (mc != null) contexts.put("minecraft", Map.of("version", Text.cut(mc, 50)));
+        if (mc != null) contexts.put("minecraft", Maps.of("version", Text.cut(mc, 50)));
         String loader = first(options.loaderName, p.loaderName);
         if (loader != null) {
             Map<String, Object> loaderContext = new LinkedHashMap<>();
@@ -328,10 +329,10 @@ public final class NiteaClient {
             loaderContext.put("version", Text.cut(first(options.loaderVersion, p.loaderVersion), 50));
             contexts.put("loader", loaderContext);
         }
-        contexts.put("java", Map.of(
+        contexts.put("java", Maps.of(
                 "version", Text.cut(System.getProperty("java.version", "unknown"), 50),
                 "vendor", Text.cut(System.getProperty("java.vendor", "unknown"), 100)));
-        contexts.put("os", Map.of(
+        contexts.put("os", Maps.of(
                 "name", Text.cut(System.getProperty("os.name", "unknown"), 100),
                 "version", Text.cut(System.getProperty("os.version", "unknown"), 100)));
         return contexts;
@@ -378,7 +379,7 @@ public final class NiteaClient {
 
     private static String first(String... values) {
         for (String value : values) {
-            if (value != null && !value.isBlank()) return value;
+            if (value != null && !Text.isBlank(value)) return value;
         }
         return null;
     }

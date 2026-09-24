@@ -1,0 +1,34 @@
+// The loader-independent core of Nitea. It is not published on its own: every artifact in versions/ compiles these
+// sources in. It targets Java 8 so the same code runs from Minecraft 1.8.9 to the latest release.
+plugins {
+    id 'java-library'
+}
+
+java.toolchain.languageVersion = JavaLanguageVersion.of(17)
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    testImplementation platform('org.junit:junit-bom:5.13.4')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+}
+
+// The library itself must run on Java 8; the tests only run here, on a modern JDK
+tasks.named('compileJava', JavaCompile) {
+    options.release = 8
+    options.compilerArgs << '-Xlint:-options'
+}
+tasks.named('compileTestJava', JavaCompile) {
+    options.release = 17
+}
+
+tasks.named('test', Test) {
+    useJUnitPlatform()
+}

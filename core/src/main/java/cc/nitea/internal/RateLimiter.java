@@ -23,7 +23,8 @@ public final class RateLimiter {
             count = 0;
             perSignature.clear();
         }
-        int same = perSignature.getOrDefault(signature, 0);
+        Integer seen = perSignature.get(signature);
+        int same = seen != null ? seen : 0;
         if (count >= PER_MINUTE || same >= SAME_PER_MINUTE) return false;
         count++;
         perSignature.put(signature, same + 1);

@@ -1,0 +1,27 @@
+plugins {
+    id 'java-library'
+    id 'maven-publish'
+    id 'net.fabricmc.fabric-loom-remap' version '1.17.21'
+}
+
+ext.niteaLoader = 'fabric'
+ext.niteaMinecraft = '1.21.11'
+apply from: '../../../gradle/nitea-module.gradle'
+
+java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+
+// On Fabric, Nitea is a library mod (fabric.mod.json, no entry point): Fabric only loads nested jars that are mods.
+// Mod Menu shows it under libraries. Nitea.init starts its screens.
+dependencies {
+    minecraft 'com.mojang:minecraft:1.21.11'
+    mappings loom.officialMojangMappings()
+    modCompileOnly 'net.fabricmc:fabric-loader:0.19.5'
+}
+
+tasks.named('processResources', ProcessResources) {
+    def version = project.version
+    inputs.property 'version', version
+    filesMatching('fabric.mod.json') {
+        expand 'version': version
+    }
+}

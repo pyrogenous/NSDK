@@ -66,7 +66,7 @@ public final class StackTraces {
         Map<String, Object> value = new LinkedHashMap<>();
         value.put("type", Text.cut(type, 500));
         value.put("value", Text.cut(message, 5000));
-        if (!frames.isEmpty()) value.put("stacktrace", Map.of("frames", frames));
+        if (!frames.isEmpty()) value.put("stacktrace", Collections.singletonMap("frames", frames));
         return value;
     }
 

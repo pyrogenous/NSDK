@@ -1,0 +1,13 @@
+{
+  "required": false,
+  "minVersion": "0.8",
+  "package": "cc.nitea.fabric.mixin",
+  "compatibilityLevel": "JAVA_25",
+  "client": [
+    "ScreenOpeningMixin",
+    "TitleScreenMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 0
+  }
+}

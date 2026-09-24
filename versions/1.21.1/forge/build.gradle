@@ -1,0 +1,39 @@
+plugins {
+    id 'java-library'
+    id 'maven-publish'
+    id 'net.minecraftforge.gradle' version '[7.0.3,8)'
+}
+
+ext.niteaLoader = 'forge'
+ext.niteaMinecraft = '1.21.1'
+apply from: '../../../gradle/nitea-module.gradle'
+
+java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+
+// Only used to compile against Minecraft and Forge: Nitea is a library, not a mod
+minecraft {
+    mappings channel: 'official', version: '1.21.1'
+}
+
+repositories {
+    minecraft.mavenizer(it)
+    maven fg.forgeMaven
+    maven fg.minecraftLibsMaven
+    mavenCentral()
+}
+
+dependencies {
+    // compileOnly: players' games provide Forge, so it stays out of the published POM
+    compileOnly minecraft.dependency('net.minecraftforge:forge:1.21.1-52.1.16')
+}
+
+tasks.named('jar', Jar) {
+    manifest {
+        attributes(
+                'Automatic-Module-Name': 'cc.nitea',
+                // A game library: loaded next to Minecraft so it can use its classes, but not a mod (no mod list
+                // entry, no mods.toml). Nitea.init starts its screens.
+                'FMLModType': 'GAMELIBRARY',
+        )
+    }
+}

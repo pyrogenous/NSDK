@@ -1,0 +1,67 @@
+// Shared setup of every artifact in versions/<minecraft>/<loader>/: compiles the core and the version's shared screens
+// (versions/<minecraft>/common) in, names and versions the jar, and publishes it. Applied with
+// `apply from: '../../../gradle/nitea-module.gradle'` after the loader plugin, with ext.niteaLoader (neoforge, forge or
+// fabric) and ext.niteaMinecraft (the Minecraft version) set.
+
+def rootDir = file('../../..')
+def commonDir = file('../common')
+def rootProps = new Properties()
+file("$rootDir/gradle.properties").withInputStream { rootProps.load(it) }
+
+// On JitPack, publish under the coordinates it serves for a repository with several artifacts:
+// com.github.<user>.<repo>:<artifact>:<tag>
+def jitpack = System.getenv('JITPACK') != null
+group = jitpack ? "${System.getenv('GROUP')}.${System.getenv('ARTIFACT')}" : 'cc.nitea'
+version = System.getenv('NITEA_VERSION') ?: (jitpack ? System.getenv('VERSION') : rootProps.getProperty('nitea_version'))
+
+def artifact = "nitea-${project.ext.niteaLoader}-${project.ext.niteaMinecraft}"
+
+base {
+    archivesName = artifact
+}
+
+sourceSets.main.java.srcDir "$rootDir/core/src/main/java"
+sourceSets.main.resources.srcDir "$rootDir/core/src/main/resources"
+if (commonDir.isDirectory()) {
+    sourceSets.main.java.srcDir "$commonDir/src/main/java"
+    sourceSets.main.resources.srcDir "$commonDir/src/main/resources"
+}
+
+java {
+    withSourcesJar()
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+    options.compilerArgs << '-Xlint:-options'
+}
+
+tasks.named('jar', Jar) {
+    manifest {
+        attributes(
+                'Implementation-Title': 'Nitea',
+                'Implementation-Version': project.version,
+        )
+    }
+}
+
+publishing {
+    publications {
+        register('mavenJava', MavenPublication) {
+            artifactId = artifact
+            if (!project.ext.has('niteaCustomComponent')) from components.java
+            pom {
+                name = "Nitea for ${project.ext.niteaLoader} ${project.ext.niteaMinecraft}"
+                description = 'Opt-in error reporting and player feedback for Minecraft mods'
+                url = 'https://nitea.cc'
+            }
+        }
+    }
+    repositories {
+        // build/repo at the repository root holds every artifact; CI publishes that folder as the Maven repository
+        maven {
+            name = 'nitea'
+            url = "$rootDir/build/repo"
+        }
+    }
+}

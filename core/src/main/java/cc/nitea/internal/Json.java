@@ -16,11 +16,12 @@ public final class Json {
     private static void append(StringBuilder out, Object value) {
         if (value == null) {
             out.append("null");
-        } else if (value instanceof String s) {
-            string(out, s);
+        } else if (value instanceof String) {
+            string(out, (String) value);
         } else if (value instanceof Number || value instanceof Boolean) {
             out.append(value);
-        } else if (value instanceof Map<?, ?> map) {
+        } else if (value instanceof Map<?, ?>) {
+            Map<?, ?> map = (Map<?, ?>) value;
             out.append('{');
             boolean first = true;
             for (Map.Entry<?, ?> entry : map.entrySet()) {
@@ -33,7 +34,8 @@ public final class Json {
                 append(out, entry.getValue());
             }
             out.append('}');
-        } else if (value instanceof Collection<?> list) {
+        } else if (value instanceof Collection<?>) {
+            Collection<?> list = (Collection<?>) value;
             out.append('[');
             boolean first = true;
             for (Object item : list) {
@@ -52,15 +54,24 @@ public final class Json {
         for (int i = 0; i < s.length(); i++) {
             char c = s.charAt(i);
             switch (c) {
-                case '"' -> out.append("\\\"");
-                case '\\' -> out.append("\\\\");
-                case '\n' -> out.append("\\n");
-                case '\r' -> out.append("\\r");
-                case '\t' -> out.append("\\t");
-                default -> {
+                case '"':
+                    out.append("\\\"");
+                    break;
+                case '\\':
+                    out.append("\\\\");
+                    break;
+                case '\n':
+                    out.append("\\n");
+                    break;
+                case '\r':
+                    out.append("\\r");
+                    break;
+                case '\t':
+                    out.append("\\t");
+                    break;
+                default:
                     if (c < 0x20) out.append(String.format("\\u%04x", (int) c));
                     else out.append(c);
-                }
             }
         }
         out.append('"');
@@ -68,7 +79,7 @@ public final class Json {
 
     /** Reads a top-level string field from a small JSON response, e.g. {@code "id"}. Good enough for API replies. */
     public static String readString(String json, String field) {
-        var matcher = java.util.regex.Pattern.compile("\"" + java.util.regex.Pattern.quote(field) + "\"\\s*:\\s*\"([^\"]*)\"").matcher(json);
+        java.util.regex.Matcher matcher = java.util.regex.Pattern.compile("\"" + java.util.regex.Pattern.quote(field) + "\"\\s*:\\s*\"([^\"]*)\"").matcher(json);
         return matcher.find() ? matcher.group(1) : null;
     }
 }

@@ -53,19 +53,23 @@ public final class Platform {
 
     private static String fabricVersion(Object optionalContainer) throws ReflectiveOperationException {
         Optional<?> container = (Optional<?>) optionalContainer;
-        if (container.isEmpty()) return null;
+        if (!container.isPresent()) return null;
         Object metadata = findMethod(container.get().getClass(), "getMetadata").invoke(container.get());
         Object version = findMethod(metadata.getClass(), "getVersion").invoke(metadata);
         return (String) findMethod(version.getClass(), "getFriendlyString").invoke(version);
     }
 
-    // NeoForge and Forge: ModList.get().getModContainerById(id).getModInfo().getVersion()
+    // NeoForge and Forge: ModList.get().getModContainerById(id).getModInfo().getVersion(), or the static
+    // ModList.getModContainerById(id) of newer Forge versions
     private boolean modList(ClassLoader loader, String className, String name) {
         try {
             Class<?> modList = Class.forName(className, false, loader);
-            Object instance = modList.getMethod("get").invoke(null);
-            if (instance == null) return false;
             Method byId = modList.getMethod("getModContainerById", String.class);
+            Object instance = null;
+            if (!java.lang.reflect.Modifier.isStatic(byId.getModifiers())) {
+                instance = modList.getMethod("get").invoke(null);
+                if (instance == null) return false;
+            }
             loaderName = name;
             minecraftVersion = modVersion(byId.invoke(instance, "minecraft"));
             loaderVersion = modVersion(byId.invoke(instance, name));
@@ -77,7 +81,7 @@ public final class Platform {
 
     private static String modVersion(Object optionalContainer) throws ReflectiveOperationException {
         Optional<?> container = (Optional<?>) optionalContainer;
-        if (container.isEmpty()) return null;
+        if (!container.isPresent()) return null;
         Object info = findMethod(container.get().getClass(), "getModInfo").invoke(container.get());
         Object version = findMethod(info.getClass(), "getVersion").invoke(info);
         return version != null ? version.toString() : null;
@@ -100,7 +104,7 @@ public final class Platform {
             Object dist = staticValue(env, "getDist", "dist");
             if (dist != null) side = dist.toString().contains("CLIENT") ? "client" : "server";
             Object production = staticValue(env, "isProduction", "production");
-            if (production instanceof Boolean prod) environment = prod ? "production" : "development";
+            if (production instanceof Boolean) environment = (Boolean) production ? "production" : "development";
         } catch (Throwable ignored) {
             // Not this loader
         }

@@ -31,11 +31,10 @@ public final class NiteaConsent {
     }
 
     public static State state() {
-        return switch (Engine.consent()) {
-            case Engine.GRANTED -> State.GRANTED;
-            case Engine.DENIED -> State.DENIED;
-            default -> State.UNDECIDED;
-        };
+        String consent = Engine.consent();
+        if (Engine.GRANTED.equals(consent)) return State.GRANTED;
+        if (Engine.DENIED.equals(consent)) return State.DENIED;
+        return State.UNDECIDED;
     }
 
     /** Opts in: queued and future events of every mod are sent. */

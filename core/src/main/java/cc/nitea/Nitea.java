@@ -2,6 +2,7 @@ package cc.nitea;
 
 import cc.nitea.internal.Engine;
 import cc.nitea.internal.Log;
+import cc.nitea.internal.Text;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
@@ -35,7 +36,7 @@ public final class Nitea {
             Log log = new Log(id, options.debug);
             Engine.useGameDir(options.gameDir);
             Class<?> owner = options.owner;
-            Engine.registerMod(id, options.inAppPackages, owner != null && owner.getModule().isNamed() ? owner.getModule().getName() : null);
+            Engine.registerMod(id, options.inAppPackages, owner != null ? Engine.moduleName(owner) : null);
             Properties bundled = bundledConfig(options);
             String sdkKey = resolve(options.sdkKey, id, "sdkKey", "SDK_KEY", bundled);
             String endpoint = resolve(options.endpoint, id, "endpoint", "ENDPOINT", bundled);
@@ -47,14 +48,32 @@ public final class Nitea {
         });
     }
 
-    // Nitea is a library, not a mod, so nothing else starts its in-game screens (consent, title screen button).
-    // Without NeoForge (e.g. in unit tests) there are none, and the rest of the library works the same.
+    // Each artifact (one per loader and Minecraft version) ships one of these classes with the in-game screens
+    // (consent, title screen button). The core is the same in every artifact, so it looks them up by name.
+    private static final String[] LOADER_HOOKS = {
+        "cc.nitea.neoforge.NiteaNeoForge", "cc.nitea.forge.NiteaForge", "cc.nitea.fabric.NiteaFabric",
+    };
+
+    // Without a loader (e.g. in unit tests), or when the game's classes differ from the ones the screens were built
+    // against, there are no screens and the rest of the library works the same.
     private static void installScreens(Log log) {
-        try {
-            cc.nitea.neoforge.NiteaNeoForge.install();
-        } catch (LinkageError e) {
-            log.debug("Not running on NeoForge, no in-game screens: " + e);
+        for (String name : LOADER_HOOKS) {
+            Class<?> hooks;
+            try {
+                hooks = Class.forName(name, false, Nitea.class.getClassLoader());
+            } catch (ClassNotFoundException | LinkageError e) {
+                continue;
+            }
+            try {
+                hooks.getMethod("install").invoke(null);
+            } catch (java.lang.reflect.InvocationTargetException e) {
+                log.warn("Could not start Nitea's in-game screens: " + e.getCause());
+            } catch (ReflectiveOperationException | LinkageError e) {
+                log.warn("Could not start Nitea's in-game screens: " + e);
+            }
+            return;
         }
+        log.debug("No mod loader found, no in-game screens");
     }
 
     /** The client a mod created with {@link #init}, or null. */
@@ -64,11 +83,11 @@ public final class Nitea {
 
     // Explicit option, then system property, then environment variable, then the resource bundled in the mod jar
     private static String resolve(String explicit, String modId, String property, String envSuffix, Properties bundled) {
-        if (explicit != null && !explicit.isBlank()) return explicit.trim();
+        if (explicit != null && !Text.isBlank(explicit)) return explicit.trim();
         String value = System.getProperty("nitea." + modId + "." + property);
-        if (value == null || value.isBlank()) value = System.getenv("NITEA_" + modId.toUpperCase(Locale.ROOT) + "_" + envSuffix);
-        if (value == null || value.isBlank()) value = bundled.getProperty(property);
-        return value == null || value.isBlank() ? null : value.trim();
+        if (value == null || Text.isBlank(value)) value = System.getenv("NITEA_" + modId.toUpperCase(Locale.ROOT).replace('-', '_') + "_" + envSuffix);
+        if (value == null || Text.isBlank(value)) value = bundled.getProperty(property);
+        return value == null || Text.isBlank(value) ? null : value.trim();
     }
 
     // nitea/<modId>.properties, looked up through the mod's own class loader so each mod finds its own file
