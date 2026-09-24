@@ -1,5 +1,5 @@
 # Builds every artifact and publishes them as a Maven repository on GitHub Pages:
-#   https://pyrogenous.github.io/NSDK  ->  cc.nitea:nitea-<loader>-<minecraft>:<version>
+#   https://libraries.nitea.cc  ->  cc.nitea:nitea-<loader>-<minecraft>:<version>
 # Runs when a version tag is pushed (git tag 0.3.0 && git push origin 0.3.0); the tag is the version.
 # Can also be started by hand from the Actions tab, which publishes the version in gradle.properties.
 name: Publish
@@ -46,6 +46,10 @@ jobs:
         env:
           NITEA_VERSION: ${{ github.ref_type == 'tag' && github.ref_name || '' }}
 
+      # GitHub Pages has no directory listing: a home page listing every artifact instead of a 404
+      - name: Write the repository's index page
+        run: python3 .github/scripts/repository-index.py build/repo
+
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
         with:
@@ -53,4 +57,6 @@ jobs:
           publish_branch: gh-pages
           publish_dir: build/repo
           keep_files: true
+          # Served at libraries.nitea.cc (GitHub Pages custom domain); rewritten on every deploy so it's never lost
+          cname: libraries.nitea.cc
           commit_message: Publish ${{ github.ref_name }}

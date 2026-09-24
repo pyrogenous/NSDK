@@ -35,13 +35,13 @@ Every loader and Minecraft version gets its own artifact, `nitea-<loader>-<minec
 
 ### 1. Add the dependency
 
-Nitea is published in its own Maven repository, `https://pyrogenous.github.io/NSDK`, as `cc.nitea:nitea-<loader>-<minecraft>:<version>`. Bundle it inside your mod jar; when several mods ship it, the loader keeps one copy, the newest.
+Nitea is published in its own Maven repository, `https://libraries.nitea.cc`, as `cc.nitea:nitea-<loader>-<minecraft>:<version>`. Bundle it inside your mod jar; when several mods ship it, the loader keeps one copy, the newest.
 
 **NeoForge** (ModDevGradle):
 
 ```groovy
 repositories {
-    maven { url 'https://pyrogenous.github.io/NSDK' }
+    maven { url 'https://libraries.nitea.cc' }
 }
 
 dependencies {
@@ -61,8 +61,16 @@ plugins {
 
 jarJar.register()
 
+// The jar with Nitea inside is the one to release: build/libs/<mod>-<version>.jar (by default it's the -all.jar)
+tasks.named('jar', Jar) {
+    archiveClassifier = 'slim'
+}
+tasks.named('jarJar') {
+    archiveClassifier = ''
+}
+
 repositories {
-    maven { url 'https://pyrogenous.github.io/NSDK' }
+    maven { url 'https://libraries.nitea.cc' }
 }
 
 dependencies {
@@ -74,7 +82,7 @@ dependencies {
 
 ```groovy
 repositories {
-    maven { url 'https://pyrogenous.github.io/NSDK' }
+    maven { url 'https://libraries.nitea.cc' }
 }
 
 dependencies {
@@ -250,7 +258,7 @@ git tag 0.3.1
 git push origin 0.3.1
 ```
 
-It builds and tests every artifact with the tag as the version, adds them to the Maven repository on the `gh-pages` branch (older versions stay), and GitHub Pages serves it at https://pyrogenous.github.io/NSDK.
+It builds and tests every artifact with the tag as the version, adds them to the Maven repository on the `gh-pages` branch (older versions stay), and GitHub Pages serves it at https://libraries.nitea.cc (custom domain, set in the workflow).
 
 JitPack can still build the repository too (`jitpack.yml`, as `com.github.pyrogenous.NSDK:nitea-<loader>-<minecraft>:<tag>`), but the first build of a version may hit its time limit.
 
