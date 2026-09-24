@@ -1,0 +1,80 @@
+{
+  "formatVersion": "1.1",
+  "component": {
+    "group": "cc.nitea",
+    "module": "nitea-forge-1.21.11",
+    "version": "0.3.0",
+    "attributes": {
+      "org.gradle.status": "release"
+    }
+  },
+  "createdBy": {
+    "gradle": {
+      "version": "9.5.1"
+    }
+  },
+  "variants": [
+    {
+      "name": "apiElements",
+      "attributes": {
+        "org.gradle.category": "library",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.jvm.version": 21,
+        "org.gradle.libraryelements": "jar",
+        "org.gradle.usage": "java-api"
+      },
+      "files": [
+        {
+          "name": "nitea-forge-1.21.11-0.3.0.jar",
+          "url": "nitea-forge-1.21.11-0.3.0.jar",
+          "size": 74258,
+          "sha512": "bd65f109d4ac8148cfd468ad886a07f64bdeba685b76792c508602b8cbd19885d07369a07f01cb93be3ac7fb4c28dfb946d4447eacea1364b1bffb1bd01f2353",
+          "sha256": "6d75219f6f5cf0e5040b99faa48bb9a97094768d20541b3c9e469cde579c3652",
+          "sha1": "e2fe58e95adc03678b9e330363e02ed4a45f5eae",
+          "md5": "9f565ad7e345176a817baaf09e96bc99"
+        }
+      ]
+    },
+    {
+      "name": "runtimeElements",
+      "attributes": {
+        "org.gradle.category": "library",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.jvm.version": 21,
+        "org.gradle.libraryelements": "jar",
+        "org.gradle.usage": "java-runtime"
+      },
+      "files": [
+        {
+          "name": "nitea-forge-1.21.11-0.3.0.jar",
+          "url": "nitea-forge-1.21.11-0.3.0.jar",
+          "size": 74258,
+          "sha512": "bd65f109d4ac8148cfd468ad886a07f64bdeba685b76792c508602b8cbd19885d07369a07f01cb93be3ac7fb4c28dfb946d4447eacea1364b1bffb1bd01f2353",
+          "sha256": "6d75219f6f5cf0e5040b99faa48bb9a97094768d20541b3c9e469cde579c3652",
+          "sha1": "e2fe58e95adc03678b9e330363e02ed4a45f5eae",
+          "md5": "9f565ad7e345176a817baaf09e96bc99"
+        }
+      ]
+    },
+    {
+      "name": "sourcesElements",
+      "attributes": {
+        "org.gradle.category": "documentation",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.docstype": "sources",
+        "org.gradle.usage": "java-runtime"
+      },
+      "files": [
+        {
+          "name": "nitea-forge-1.21.11-0.3.0-sources.jar",
+          "url": "nitea-forge-1.21.11-0.3.0-sources.jar",
+          "size": 42924,
+          "sha512": "be116c5c2ad1f292fb8b4dd6b29cd2158f221409f094004f11b7e286feb8078338d7aca72c5e968df92868fc775bfd66faa0d71f8d9686963c59e6cff75f69e6",
+          "sha256": "a7591cb6f857d8d451b746c8c037e3f260aa1838656100091366b0bdaedda254",
+          "sha1": "53b5d8829fd35940af0c1e358cae7e91818f494e",
+          "md5": "2f93d063d965050f479da90446d8c822"
+        }
+      ]
+    }
+  ]
+}

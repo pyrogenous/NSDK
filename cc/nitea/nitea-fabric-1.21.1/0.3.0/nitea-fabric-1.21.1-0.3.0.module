@@ -1,0 +1,80 @@
+{
+  "formatVersion": "1.1",
+  "component": {
+    "group": "cc.nitea",
+    "module": "nitea-fabric-1.21.1",
+    "version": "0.3.0",
+    "attributes": {
+      "org.gradle.status": "release"
+    }
+  },
+  "createdBy": {
+    "gradle": {
+      "version": "9.5.1"
+    }
+  },
+  "variants": [
+    {
+      "name": "apiElements",
+      "attributes": {
+        "org.gradle.category": "library",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.jvm.version": 21,
+        "org.gradle.libraryelements": "jar",
+        "org.gradle.usage": "java-api"
+      },
+      "files": [
+        {
+          "name": "nitea-fabric-1.21.1-0.3.0.jar",
+          "url": "nitea-fabric-1.21.1-0.3.0.jar",
+          "size": 77561,
+          "sha512": "0416da55a42d30d08c103cd2eba82072bb055f16ba2e0f8e15ff2717b35aae02b66d492e932065e0f069ec3e929d43a5a912fe0760edbeaa657cb3421caef265",
+          "sha256": "b6ee0ffd2ebc500e64a76400eaa78edd2e9c8fee4318e1a8f1de0809a143983f",
+          "sha1": "d6276939e2de0d448c96027958dc9b6a23e93ffc",
+          "md5": "f7e2d0ec65561dfe152a1ab20cef4c85"
+        }
+      ]
+    },
+    {
+      "name": "runtimeElements",
+      "attributes": {
+        "org.gradle.category": "library",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.jvm.version": 21,
+        "org.gradle.libraryelements": "jar",
+        "org.gradle.usage": "java-runtime"
+      },
+      "files": [
+        {
+          "name": "nitea-fabric-1.21.1-0.3.0.jar",
+          "url": "nitea-fabric-1.21.1-0.3.0.jar",
+          "size": 77561,
+          "sha512": "0416da55a42d30d08c103cd2eba82072bb055f16ba2e0f8e15ff2717b35aae02b66d492e932065e0f069ec3e929d43a5a912fe0760edbeaa657cb3421caef265",
+          "sha256": "b6ee0ffd2ebc500e64a76400eaa78edd2e9c8fee4318e1a8f1de0809a143983f",
+          "sha1": "d6276939e2de0d448c96027958dc9b6a23e93ffc",
+          "md5": "f7e2d0ec65561dfe152a1ab20cef4c85"
+        }
+      ]
+    },
+    {
+      "name": "sourcesElements",
+      "attributes": {
+        "org.gradle.category": "documentation",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.docstype": "sources",
+        "org.gradle.usage": "java-runtime"
+      },
+      "files": [
+        {
+          "name": "nitea-fabric-1.21.1-0.3.0-sources.jar",
+          "url": "nitea-fabric-1.21.1-0.3.0-sources.jar",
+          "size": 45476,
+          "sha512": "647f9f1f8f2ef6b734ead2372fdc00501e06e3d3c48a72759611b8947cbd06997fe3d920fcc43d7469d567deda1a3d2e6ab76774bbc34a8a003d1087037a35e0",
+          "sha256": "006e603e84d04cafa047868c11e77da8bc2c380224147fc78c553a138f648b2e",
+          "sha1": "59fae9fa3e5b62ea036f58f4c093abc4eb566cbf",
+          "md5": "c4c9038e33578099d8cc65ef398d0938"
+        }
+      ]
+    }
+  ]
+}
