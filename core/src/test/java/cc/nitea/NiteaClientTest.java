@@ -105,6 +105,44 @@ class NiteaClientTest {
     }
 
     @Test
+    void reportsTheCrashThatClosesTheGameWhileItExits() throws Exception {
+        Engine.registerMod("crashmod", List.of("com.example.crashmod"), null);
+        NiteaClient client = client("crashmod");
+        client.addBreadcrumb("screen", "Opened the book");
+        // The launch's own scan (first launch: it only sets the "scanned until" mark)
+        Thread.sleep(300);
+
+        // What Minecraft writes before exiting
+        Path reports = Files.createDirectories(gameDir.resolve("crash-reports"));
+        Files.writeString(reports.resolve("crash-2026-09-26_23.18.06-client.txt"), String.join("\n",
+                "---- Minecraft Crash Report ----",
+                "Description: Rendering screen",
+                "",
+                "java.lang.IllegalStateException: Tried to access entity ID before ID assignment",
+                "\tat TRANSFORMER/minecraft@26.2/net.minecraft.world.entity.Entity.getId(Entity.java:388)",
+                "\tat TRANSFORMER/crashmod@1.0/com.example.crashmod.BookScreen.render(BookScreen.java:130)",
+                "\tat TRANSFORMER/minecraft@26.2/net.minecraft.client.Minecraft.run(Minecraft.java:919)",
+                "",
+                "",
+                "A detailed walkthrough of the error, its code path and all known details is as follows:"));
+
+        client.reportCrashReportsOnExit();
+        Request request = requests.poll(5, TimeUnit.SECONDS);
+        assertNotNull(request, "the crash is sent while the game exits");
+        String body = request.body();
+        assertTrue(body.contains("\"kind\":\"crash\""), body);
+        assertTrue(body.contains("\"mechanism\":\"crash-report\""), body);
+        assertTrue(body.contains("BookScreen"), body);
+        // Same launch: its breadcrumbs lead up to the crash
+        assertTrue(body.contains("Opened the book"), body);
+
+        // Not sent a second time (by the next launch)
+        client.reportCrashReportsOnExit();
+        assertNull(requests.poll(500, TimeUnit.MILLISECONDS));
+        client.close(Duration.ofSeconds(1));
+    }
+
+    @Test
     void sendsPlayerReports() throws Exception {
         NiteaClient client = client("reportmod");
         client.reportBug("The wand deletes my torches");

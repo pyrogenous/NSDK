@@ -46,7 +46,7 @@ repositories {
 }
 
 dependencies {
-    jarJar(implementation("cc.nitea:nitea-neoforge-26.2:0.4.0"))
+    jarJar(implementation("cc.nitea:nitea-neoforge-26.2:0.4.1"))
 }
 ```
 
@@ -75,7 +75,7 @@ repositories {
 }
 
 dependencies {
-    implementation(jarJar("cc.nitea:nitea-forge-26.2:0.4.0"))
+    implementation(jarJar("cc.nitea:nitea-forge-26.2:0.4.1"))
 }
 ```
 
@@ -88,9 +88,9 @@ repositories {
 
 dependencies {
     // 26.x (net.fabricmc.fabric-loom)
-    include(implementation("cc.nitea:nitea-fabric-26.2:0.4.0"))
+    include(implementation("cc.nitea:nitea-fabric-26.2:0.4.1"))
     // 1.21.x (net.fabricmc.fabric-loom-remap)
-    // include(modImplementation("cc.nitea:nitea-fabric-1.21.1:0.4.0"))
+    // include(modImplementation("cc.nitea:nitea-fabric-1.21.1:0.4.1"))
 }
 ```
 
@@ -147,7 +147,7 @@ You don't need to build a consent screen, Nitea has its own.
 
 ### 4. Send reports
 
-After `init`, uncaught exceptions from your code are reported on their own, and so are Minecraft crash reports your mod caused (those are sent the next time the game starts).
+After `init`, uncaught exceptions from your code are reported on their own, and so are Minecraft crash reports your mod caused. Those are sent while the game closes after the crash; if that fails (the game was killed, no network), they're sent the next time it starts.
 
 You can also send things yourself:
 

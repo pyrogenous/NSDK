@@ -170,8 +170,16 @@ public final class Nitea {
             }
         });
 
-        // Send whatever is still queued when the game exits
+        // When the game exits: report the crash that closed it (Minecraft writes crash-reports/ first, then exits), then
+        // send whatever is still queued
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            for (NiteaClient client : CLIENTS.values()) {
+                try {
+                    client.reportCrashReportsOnExit();
+                } catch (Throwable ignored) {
+                    // Never keep the game from closing
+                }
+            }
             for (NiteaClient client : CLIENTS.values()) client.close(Duration.ofSeconds(3));
         }, "Nitea-shutdown"));
     }

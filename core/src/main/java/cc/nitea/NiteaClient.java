@@ -280,18 +280,31 @@ public final class NiteaClient {
     /** Reports Minecraft crash reports written since the last launch (and since the player opted in) that this mod caused. */
     void scanCrashReports() {
         if (!isEnabled() || !options.scanCrashReports) return;
-        transport.background(() -> {
-            for (CrashReports.Found crash : CrashReports.scan(options.gameDir, options.modId, settings)) {
-                Map<String, Object> event = event("crash", Level.FATAL, crash.description(), Maps.of("mechanism", "crash-report", "crash_report", crash.fileName()));
-                event.put("timestamp", crash.time().truncatedTo(ChronoUnit.MILLIS).toString());
-                List<Map<String, Object>> values = traces.parse(crash.text());
-                if (!values.isEmpty()) event.put("exception", Maps.of("values", values));
-                // Breadcrumbs belong to this launch, not the one that crashed
-                event.remove("breadcrumbs");
-                send(event, false);
-                log.info("Reported crash report " + crash.fileName());
-            }
-        });
+        transport.background(() -> reportCrashReports(false));
+    }
+
+    /**
+     * From the shutdown hook, before the queue is flushed: Minecraft writes its crash report and then exits the JVM,
+     * so a crash this mod caused is sent now, while the game closes, instead of on the next launch (which may never
+     * come). Sent on the calling thread: the sending thread is about to stop. The scan moves the "scanned until" mark,
+     * so the next launch doesn't send it again.
+     */
+    void reportCrashReportsOnExit() {
+        if (!isEnabled() || !options.scanCrashReports || !Engine.GRANTED.equals(Engine.consent())) return;
+        reportCrashReports(true);
+    }
+
+    private void reportCrashReports(boolean now) {
+        for (CrashReports.Found crash : CrashReports.scan(options.gameDir, options.modId, settings)) {
+            Map<String, Object> event = event("crash", Level.FATAL, crash.description(), Maps.of("mechanism", "crash-report", "crash_report", crash.fileName()));
+            event.put("timestamp", crash.time().truncatedTo(ChronoUnit.MILLIS).toString());
+            List<Map<String, Object>> values = traces.parse(crash.text());
+            if (!values.isEmpty()) event.put("exception", Maps.of("values", values));
+            // Sent at the next launch: the breadcrumbs belong to that launch, not the one that crashed
+            if (!now) event.remove("breadcrumbs");
+            send(event, now);
+            log.info("Reported crash report " + crash.fileName());
+        }
     }
 
     boolean capturesUncaught() {

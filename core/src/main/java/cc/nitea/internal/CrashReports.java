@@ -13,9 +13,10 @@ import java.util.stream.Stream;
 
 /**
  * Minecraft catches most crashes itself, writes {@code crash-reports/crash-*.txt} and exits, so an uncaught
- * exception handler never sees them. Instead, on the next launch, the reports written since the last scan are read
- * and the ones this mod caused (see {@link Engine#culprit(String)}) are sent as crashes. Reports written before the
- * player allowed reporting are never sent.
+ * exception handler never sees them. Instead, the reports written since the last scan are read and the ones this mod
+ * caused (see {@link Engine#culprit(String)}) are sent as crashes: while the game exits (the shutdown hook), and again
+ * at the next launch for whatever that missed (the game was killed, no network). Reports written before the player
+ * allowed reporting are never sent.
  */
 public final class CrashReports {
     private static final String STATE_KEY = "crashReportsScannedAt";
