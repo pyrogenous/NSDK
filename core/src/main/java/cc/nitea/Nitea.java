@@ -1,8 +1,10 @@
 package cc.nitea;
 
+import cc.nitea.internal.Compat;
 import cc.nitea.internal.Engine;
 import cc.nitea.internal.Log;
 import cc.nitea.internal.Text;
+import cc.nitea.internal.Version;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
@@ -30,22 +32,53 @@ public final class Nitea {
 
     private Nitea() {}
 
-    /** Creates the client for a mod, or returns the existing one if the mod already initialised it. */
+    /**
+     * Creates the client for a mod, or returns the existing one if the mod already initialised it. Never throws:
+     * when Nitea can't run for the mod (built against a Nitea too old for the one in the game, or an unexpected
+     * error), the mod gets a client that does nothing and the reason is logged. The mod itself keeps working.
+     */
     public static NiteaClient init(NiteaOptions options) {
         return CLIENTS.computeIfAbsent(options.modId, id -> {
             Log log = new Log(id, options.debug);
-            Engine.useGameDir(options.gameDir);
-            Class<?> owner = options.owner;
-            Engine.registerMod(id, options.inAppPackages, owner != null ? Engine.moduleName(owner) : null);
-            Properties bundled = bundledConfig(options);
-            String sdkKey = resolve(options.sdkKey, id, "sdkKey", "SDK_KEY", bundled);
-            String endpoint = resolve(options.endpoint, id, "endpoint", "ENDPOINT", bundled);
-            NiteaClient client = new NiteaClient(options, sdkKey, endpoint != null ? endpoint : NiteaOptions.DEFAULT_ENDPOINT, log);
-            installHooks();
-            installScreens(log);
-            client.start();
-            return client;
+            try {
+                return start(options, log);
+            } catch (VirtualMachineError e) {
+                throw e;
+            } catch (Throwable e) {
+                return new NiteaClient(options, null, NiteaOptions.DEFAULT_ENDPOINT, log,
+                        "Nitea could not start and is off for this mod; the mod keeps working. Please report this to Nitea: " + e);
+            }
         });
+    }
+
+    private static NiteaClient start(NiteaOptions options, Log log) {
+        String id = options.modId;
+        Engine.useGameDir(options.gameDir);
+        Class<?> owner = options.owner;
+
+        // Mods built against a Nitea older than the supported window are left out: the running copy may no longer
+        // behave the way they expect. They are not registered, so nothing is ever reported for them.
+        Compat.Result compat = Compat.check(id, owner);
+        if (compat.tooOld()) {
+            return new NiteaClient(options, null, NiteaOptions.DEFAULT_ENDPOINT, log, "This mod was built with Nitea " + compat.builtWith
+                    + ", more than " + Compat.SUPPORTED_LINES + " versions older than the Nitea " + Version.get()
+                    + " running in this game (bundled by another mod). Nitea is turned off for this mod to avoid errors;"
+                    + " the mod itself keeps working. Mod author: update Nitea to " + Compat.CURRENT_LINE + " or newer.");
+        }
+        if (compat.newerThanRunning()) {
+            log.warn("This mod was built with Nitea " + compat.builtWith + " but another mod bundles the older Nitea " + Version.get()
+                    + ", which the game loaded instead. Newer Nitea features won't work until that mod updates.");
+        }
+
+        Engine.registerMod(id, options.inAppPackages, owner != null ? Engine.moduleName(owner) : null);
+        Properties bundled = bundledConfig(options);
+        String sdkKey = resolve(options.sdkKey, id, "sdkKey", "SDK_KEY", bundled);
+        String endpoint = resolve(options.endpoint, id, "endpoint", "ENDPOINT", bundled);
+        NiteaClient client = new NiteaClient(options, sdkKey, endpoint != null ? endpoint : NiteaOptions.DEFAULT_ENDPOINT, log);
+        installHooks();
+        installScreens(log);
+        client.start();
+        return client;
     }
 
     // Each artifact (one per loader and Minecraft version) ships one of these classes with the in-game screens

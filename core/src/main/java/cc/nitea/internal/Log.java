@@ -14,6 +14,7 @@ public final class Log {
     private final Object logger;
     private final MethodHandle info;
     private final MethodHandle warn;
+    private final MethodHandle error;
 
     public Log(String modId, boolean debugEnabled) {
         this.prefix = "[Nitea/" + modId + "] ";
@@ -21,6 +22,7 @@ public final class Log {
         Object logger = null;
         MethodHandle info = null;
         MethodHandle warn = null;
+        MethodHandle error = null;
         try {
             Class<?> factory = Class.forName("org.slf4j.LoggerFactory");
             Class<?> loggerClass = Class.forName("org.slf4j.Logger");
@@ -28,12 +30,14 @@ public final class Log {
             MethodType type = MethodType.methodType(void.class, String.class);
             info = MethodHandles.publicLookup().findVirtual(loggerClass, "info", type);
             warn = MethodHandles.publicLookup().findVirtual(loggerClass, "warn", type);
+            error = MethodHandles.publicLookup().findVirtual(loggerClass, "error", type);
         } catch (Throwable ignored) {
             // No SLF4J: stderr it is
         }
         this.logger = logger;
         this.info = info;
         this.warn = warn;
+        this.error = error;
     }
 
     public void info(String message) {
@@ -42,6 +46,11 @@ public final class Log {
 
     public void warn(String message) {
         emit(warn, message);
+    }
+
+    /** Something the mod's author has to fix; Nitea is off for the mod until they do. */
+    public void error(String message) {
+        emit(error, message);
     }
 
     /** Only logged when the options enable debug output. */

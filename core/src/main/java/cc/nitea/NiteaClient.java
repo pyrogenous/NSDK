@@ -48,17 +48,28 @@ public final class NiteaClient {
     // Events captured before the player chose, sent if they opt in
     private final Deque<Map<String, Object>> pending = new ArrayDeque<>();
     private volatile Platform platform;
+    private final String turnedOff;
 
     private static final int MAX_PENDING = 25;
 
     NiteaClient(NiteaOptions options, String sdkKey, String endpoint, Log log) {
+        this(options, sdkKey, endpoint, log, null);
+    }
+
+    /** {@code turnedOff}: why Nitea must stay off for this mod (e.g. built against a Nitea too old), or null. */
+    NiteaClient(NiteaOptions options, String sdkKey, String endpoint, Log log, String turnedOff) {
         this.options = options;
         this.log = log;
         this.traces = new StackTraces(options.inAppPackages);
         this.settings = Settings.of(options.gameDir);
+        this.turnedOff = turnedOff;
         tags.putAll(options.tags);
 
-        if (!Engine.modEnabled(options.modId)) {
+        if (turnedOff != null) {
+            // Every method keeps working as a no-op, so the mod runs normally without Nitea
+            log.error(turnedOff);
+            transport = null;
+        } else if (!Engine.modEnabled(options.modId)) {
             log.info("Reporting for this mod is turned off in config/nitea/nitea.properties");
             transport = null;
         } else if (sdkKey == null || Text.isBlank(sdkKey)) {
@@ -66,7 +77,8 @@ public final class NiteaClient {
             transport = null;
         } else {
             if (!sdkKey.startsWith("nt_")) log.warn("The SDK key should start with nt_; check it in your project settings");
-            transport = new Transport(options.modId, endpoint, sdkKey.trim(), log);
+            transport = new Transport(options.modId, options.owner != null ? options.owner.getName() : null, endpoint, sdkKey.trim(), log);
+            if (options.owner == null) log.warn("No owner class set: call .owner(YourMod.class) on NiteaOptions, or the API refuses events for projects with a registered Java package");
             log.info("Reporting to " + endpoint + " (release " + options.release + ")");
         }
     }
@@ -79,6 +91,12 @@ public final class NiteaClient {
     // Events can still be captured: sent right away once the player opted in, kept in memory while they haven't chosen
     private boolean capturing() {
         return transport != null && transport.usable() && !Engine.DENIED.equals(Engine.consent());
+    }
+
+    // Why reporting is off for good for this mod (Nitea too old for it, or refused by the API), or null
+    String turnedOffReason() {
+        if (turnedOff != null) return turnedOff;
+        return transport != null ? transport.disabledReason() : null;
     }
 
     /** The mod ID this client reports for. */

@@ -1,0 +1,66 @@
+# Public API of Nitea 0.2 (from compat/nitea-core-0.2.0.jar)
+# Every signature below must exist, unchanged, in every later Nitea release (see AGENTS.md).
+class cc.nitea.Level enum
+class cc.nitea.Nitea class
+class cc.nitea.NiteaClient class
+class cc.nitea.NiteaConsent class
+class cc.nitea.NiteaConsent$State enum
+class cc.nitea.NiteaOptions class
+class cc.nitea.NiteaOptions$Builder class
+field cc.nitea.Level static cc.nitea.Level DEBUG
+field cc.nitea.Level static cc.nitea.Level ERROR
+field cc.nitea.Level static cc.nitea.Level FATAL
+field cc.nitea.Level static cc.nitea.Level INFO
+field cc.nitea.Level static cc.nitea.Level WARNING
+field cc.nitea.NiteaConsent$State static cc.nitea.NiteaConsent$State DENIED
+field cc.nitea.NiteaConsent$State static cc.nitea.NiteaConsent$State GRANTED
+field cc.nitea.NiteaConsent$State static cc.nitea.NiteaConsent$State UNDECIDED
+field cc.nitea.NiteaOptions static java.lang.String DEFAULT_ENDPOINT
+method cc.nitea.Level static cc.nitea.Level valueOf(java.lang.String)
+method cc.nitea.Level static cc.nitea.Level[] values()
+method cc.nitea.Nitea static cc.nitea.NiteaClient get(java.lang.String)
+method cc.nitea.Nitea static cc.nitea.NiteaClient init(cc.nitea.NiteaOptions)
+method cc.nitea.NiteaClient boolean isEnabled()
+method cc.nitea.NiteaClient java.lang.String installationId()
+method cc.nitea.NiteaClient java.lang.String modId()
+method cc.nitea.NiteaClient java.util.UUID captureException(java.lang.Throwable)
+method cc.nitea.NiteaClient java.util.UUID captureException(java.lang.Throwable,cc.nitea.Level)
+method cc.nitea.NiteaClient java.util.UUID captureException(java.lang.Throwable,cc.nitea.Level,java.util.Map)
+method cc.nitea.NiteaClient java.util.UUID captureMessage(java.lang.String,cc.nitea.Level)
+method cc.nitea.NiteaClient java.util.UUID reportBug(java.lang.String)
+method cc.nitea.NiteaClient java.util.UUID reportBug(java.lang.String,java.util.function.Consumer)
+method cc.nitea.NiteaClient java.util.UUID reportSuggestion(java.lang.String)
+method cc.nitea.NiteaClient java.util.UUID reportSuggestion(java.lang.String,java.util.function.Consumer)
+method cc.nitea.NiteaClient void addBreadcrumb(java.lang.String,java.lang.String)
+method cc.nitea.NiteaClient void addBreadcrumb(java.lang.String,java.lang.String,cc.nitea.Level)
+method cc.nitea.NiteaClient void close(java.time.Duration)
+method cc.nitea.NiteaClient void setTag(java.lang.String,java.lang.String)
+method cc.nitea.NiteaConsent static boolean shouldAsk()
+method cc.nitea.NiteaConsent static cc.nitea.NiteaConsent$State state()
+method cc.nitea.NiteaConsent static java.util.Set mods()
+method cc.nitea.NiteaConsent static void deny()
+method cc.nitea.NiteaConsent static void grant()
+method cc.nitea.NiteaConsent static void markPromptAvailable()
+method cc.nitea.NiteaConsent static void onChange(java.lang.Runnable)
+method cc.nitea.NiteaConsent static void useGameDir(java.nio.file.Path)
+method cc.nitea.NiteaConsent$State static cc.nitea.NiteaConsent$State valueOf(java.lang.String)
+method cc.nitea.NiteaConsent$State static cc.nitea.NiteaConsent$State[] values()
+method cc.nitea.NiteaOptions java.lang.String modId()
+method cc.nitea.NiteaOptions static cc.nitea.NiteaOptions$Builder builder(java.lang.String)
+method cc.nitea.NiteaOptions$Builder cc.nitea.NiteaOptions build()
+method cc.nitea.NiteaOptions$Builder cc.nitea.NiteaOptions$Builder captureUncaught(boolean)
+method cc.nitea.NiteaOptions$Builder cc.nitea.NiteaOptions$Builder debug(boolean)
+method cc.nitea.NiteaOptions$Builder cc.nitea.NiteaOptions$Builder endpoint(java.lang.String)
+method cc.nitea.NiteaOptions$Builder cc.nitea.NiteaOptions$Builder environment(java.lang.String)
+method cc.nitea.NiteaOptions$Builder cc.nitea.NiteaOptions$Builder gameDir(java.nio.file.Path)
+method cc.nitea.NiteaOptions$Builder cc.nitea.NiteaOptions$Builder inAppPackages(java.lang.String[])
+method cc.nitea.NiteaOptions$Builder cc.nitea.NiteaOptions$Builder loader(java.lang.String,java.lang.String)
+method cc.nitea.NiteaOptions$Builder cc.nitea.NiteaOptions$Builder maxBreadcrumbs(int)
+method cc.nitea.NiteaOptions$Builder cc.nitea.NiteaOptions$Builder minecraftVersion(java.lang.String)
+method cc.nitea.NiteaOptions$Builder cc.nitea.NiteaOptions$Builder openReportLinks(boolean)
+method cc.nitea.NiteaOptions$Builder cc.nitea.NiteaOptions$Builder owner(java.lang.Class)
+method cc.nitea.NiteaOptions$Builder cc.nitea.NiteaOptions$Builder release(java.lang.String)
+method cc.nitea.NiteaOptions$Builder cc.nitea.NiteaOptions$Builder scanCrashReports(boolean)
+method cc.nitea.NiteaOptions$Builder cc.nitea.NiteaOptions$Builder sdkKey(java.lang.String)
+method cc.nitea.NiteaOptions$Builder cc.nitea.NiteaOptions$Builder side(java.lang.String)
+method cc.nitea.NiteaOptions$Builder cc.nitea.NiteaOptions$Builder tag(java.lang.String,java.lang.String)

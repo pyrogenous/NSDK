@@ -82,4 +82,10 @@ public final class Json {
         java.util.regex.Matcher matcher = java.util.regex.Pattern.compile("\"" + java.util.regex.Pattern.quote(field) + "\"\\s*:\\s*\"([^\"]*)\"").matcher(json);
         return matcher.find() ? matcher.group(1) : null;
     }
+
+    /** Reads a top-level number field from a small JSON response, or null. */
+    public static Long readLong(String json, String field) {
+        java.util.regex.Matcher matcher = java.util.regex.Pattern.compile("\"" + java.util.regex.Pattern.quote(field) + "\"\\s*:\\s*(-?\\d{1,18})").matcher(json);
+        return matcher.find() ? Long.valueOf(matcher.group(1)) : null;
+    }
 }

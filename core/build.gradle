@@ -4,7 +4,8 @@ plugins {
     id 'java-library'
 }
 
-java.toolchain.languageVersion = JavaLanguageVersion.of(17)
+// The newest JDK Minecraft uses: the compatibility tests load old Nitea releases, some of which were built for it
+java.toolchain.languageVersion = JavaLanguageVersion.of(25)
 
 repositories {
     mavenCentral()
@@ -15,6 +16,10 @@ dependencies {
     testImplementation 'org.junit.jupiter:junit-jupiter'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
+
+def rootProps = new Properties()
+file('../gradle.properties').withInputStream { rootProps.load(it) }
+def niteaVersion = System.getenv('NITEA_VERSION') ?: rootProps.getProperty('nitea_version')
 
 tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8'
@@ -31,4 +36,20 @@ tasks.named('compileTestJava', JavaCompile) {
 
 tasks.named('test', Test) {
     useJUnitPlatform()
+    systemProperty 'nitea.version', niteaVersion
+    // ./gradlew -p core test -PupdateApi rewrites src/test/resources/api/<line>.txt from the current public API
+    if (project.hasProperty('updateApi')) systemProperty 'nitea.updateApi', 'true'
+    systemProperty 'nitea.testResources', file('src/test/resources').absolutePath
+}
+
+// The core as it ships in this release, kept by the compatibility tests to check that later releases still work
+// with mods built against it and share their state with it: ./gradlew -p core compatFixture (see AGENTS.md)
+tasks.register('compatFixture', Jar) {
+    group = 'verification'
+    from sourceSets.main.output
+    archiveFileName = "nitea-core-${niteaVersion}.jar"
+    destinationDirectory = file('src/test/resources/compat')
+    manifest {
+        attributes('Implementation-Title': 'Nitea', 'Implementation-Version': niteaVersion)
+    }
 }
