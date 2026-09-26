@@ -1,0 +1,80 @@
+{
+  "formatVersion": "1.1",
+  "component": {
+    "group": "cc.nitea",
+    "module": "nitea-neoforge-26.2",
+    "version": "0.4.1",
+    "attributes": {
+      "org.gradle.status": "release"
+    }
+  },
+  "createdBy": {
+    "gradle": {
+      "version": "9.5.1"
+    }
+  },
+  "variants": [
+    {
+      "name": "apiElements",
+      "attributes": {
+        "org.gradle.category": "library",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.jvm.version": 25,
+        "org.gradle.libraryelements": "jar",
+        "org.gradle.usage": "java-api"
+      },
+      "files": [
+        {
+          "name": "nitea-neoforge-26.2-0.4.1.jar",
+          "url": "nitea-neoforge-26.2-0.4.1.jar",
+          "size": 86676,
+          "sha512": "a014247961fe2aba6b917ed668aad78c26cfc0ce212711a00a46496bdd7a783e9b43d6806c4aa16d72ac8d04ce99d79c877374ceec4cfc509b5d437b059561ad",
+          "sha256": "a3ad43fd2d883ceeb02da822db9ef0f90e38018aaeb627375a0d7479c2817650",
+          "sha1": "8f85b78c75df384abf9e34ecc021b18549473b5b",
+          "md5": "527ed913c331c89e5dcf6937ac050437"
+        }
+      ]
+    },
+    {
+      "name": "runtimeElements",
+      "attributes": {
+        "org.gradle.category": "library",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.jvm.version": 25,
+        "org.gradle.libraryelements": "jar",
+        "org.gradle.usage": "java-runtime"
+      },
+      "files": [
+        {
+          "name": "nitea-neoforge-26.2-0.4.1.jar",
+          "url": "nitea-neoforge-26.2-0.4.1.jar",
+          "size": 86676,
+          "sha512": "a014247961fe2aba6b917ed668aad78c26cfc0ce212711a00a46496bdd7a783e9b43d6806c4aa16d72ac8d04ce99d79c877374ceec4cfc509b5d437b059561ad",
+          "sha256": "a3ad43fd2d883ceeb02da822db9ef0f90e38018aaeb627375a0d7479c2817650",
+          "sha1": "8f85b78c75df384abf9e34ecc021b18549473b5b",
+          "md5": "527ed913c331c89e5dcf6937ac050437"
+        }
+      ]
+    },
+    {
+      "name": "sourcesElements",
+      "attributes": {
+        "org.gradle.category": "documentation",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.docstype": "sources",
+        "org.gradle.usage": "java-runtime"
+      },
+      "files": [
+        {
+          "name": "nitea-neoforge-26.2-0.4.1-sources.jar",
+          "url": "nitea-neoforge-26.2-0.4.1-sources.jar",
+          "size": 51781,
+          "sha512": "a59db3cebf26eb55f4d93b74ae4c86269be23b36080f555a6bbd1c4a117fe7e66e55fe8a17910993be91f144a55251d13a839fb30074b1beafbac4c727c5dde8",
+          "sha256": "f74f02dd0249d6b51f4bf3d3b63685514b8b3b00012a9a66140c38583545c7d1",
+          "sha1": "1c5a00bc5625ff458904dca3d02e4dd71cbc519f",
+          "md5": "724ca0ac0cf511da248b957f5ebbd483"
+        }
+      ]
+    }
+  ]
+}
